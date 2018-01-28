@@ -16,21 +16,21 @@ typedef struct particles_array_11{
 	Real x0,y0,z0;													// Initial positions [m]
 	Real m;																	// mass [kg]
 	Real ux,uy,uz;													// (Predicted) velocity [m/s] ( Predictor_Corrector : Predicted velocity / Euler : Real Velocity )
-	Real ux0,uy0,uz0;												// Initial velocity [m/s] 
+	Real ux0,uy0,uz0;												// Initial velocity [m/s]
 
 	Real cc;																// color code
 	Real flt_s;															// Shepard filter
 	Real w_dx;															// w(dx) for particle shifting
 	Real h;																	// kernel distance
 	Real temp;															// temperature [K]
-	Real pres;															// pressure [Pa] 
+	Real pres;															// pressure [Pa]
 	Real rho;																// density [kg/m3]	( Predictor_Corrector : Predicted density / Euler : Real density )
 	Real rho0;															// Initial density [kg/m3]
 	Real drho;															// Time Derivative of density [kg/m3 s]
-	Real rho_ref;														// 
-	Real grad_rhox,grad_rhoy,grad_rhoz;			// density gradient 
+	Real rho_ref;														//
+	Real grad_rhox,grad_rhoy,grad_rhoz;			// density gradient
 	/*
-	//Real fpx,fpy,fpz;											// pressure force [m/s2] ----------------- [ÁÖÀÇ]ISPH Æ÷ÀÎÅÍ ÇÒ´ç Áß !!!!
+	//Real fpx,fpy,fpz;											// pressure force [m/s2] ----------------- [ï¿½ï¿½ï¿½ï¿½]ISPH ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ï¿½ ï¿½ï¿½ !!!!
 	//Real fvx,fvy,fvz;											// viscous force [m/s2]
 	//Real fvax,fvay,fvaz;									// artificial viscous force [m/s2]
 	//Real fgx,fgy,fgz;											// gravitational force [m/s2]
@@ -40,6 +40,8 @@ typedef struct particles_array_11{
 	//*/
 	Real ftotalx,ftotaly,ftotalz;						// total force [m/s2]
 	Real ftotal;
+
+	Real p001;															// extra data
 }part11;
 ////////////////////////////////////////////////////////////////////////
 typedef struct particles_array_12{
@@ -47,8 +49,8 @@ typedef struct particles_array_12{
 	uint_t ct_boundary;											// const temperatrue particle index (const temp particle :1 / else : 0)
 
 	// psh: concentration diffusion
-	Real dconcn;														// concentration time derivative 
-	Real concn,concn0;											// concentration 
+	Real dconcn;														// concentration time derivative
+	Real concn,concn0;											// concentration
 
 	Real enthalpy,enthalpy0;								// enthalpy [J/kg]
 	Real denthalpy;
@@ -57,9 +59,9 @@ typedef struct particles_array_12{
 	Real fpx,fpy,fpz;												// pressure force [m/s2]
 	Real x_adv,y_adv,z_adv;									// predicted position by advection forces
 	Real rho_err;														// difference between predicted density and reference density
-	Real stiffness;													// stiffness parameter 
+	Real stiffness;													// stiffness parameter
 	Real drho0;															// Error compensation: divergence error
-	
+
 	// turbulence (by esk)
 	Real SR;																// strain rate (2S:S)
 	Real k_turb,e_turb;											// turbulence kinetic energy,dissipation rate --> check unit
