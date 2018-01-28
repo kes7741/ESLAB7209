@@ -808,12 +808,12 @@ void WCSPH(int_t*vii,Real*vif)
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	// ##. Save Final Output
+	// ##. Save Restart File
 	//-------------------------------------------------------------------------------------------------
-	// Save output files
-	if(false){
-		// Save Files
+	// Save restart files
+	if(true){
 		// Save Restart File
+		save_restart(vii,vif,host_particle_array11,host_particle_array12,host_particle_array13);
 	}
 
 	/*

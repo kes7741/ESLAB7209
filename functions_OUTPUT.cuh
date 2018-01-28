@@ -286,3 +286,32 @@ void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11)
 	fclose(outFile_vtk);
 }
 ////////////////////////////////////////////////////////////////////////
+void save_restart(int_t*vii,Real*vif,part11*Pa11,part12*Pa12,part13*Pa13)
+{
+	int_t i,nop;//,nob;
+	nop=number_of_particles;
+	int_t Nparticle=nop;									// number of fluid particles
+
+	// Filename: It should be series of frame numbers(nameXXX.vtk) for the sake of auto-reading in PARAVIEW.
+	char FileName[256];
+	sprintf(FileName,"./plotdata/restart.txt");
+	// If the file already exists, its contents are discarded and create the new one.
+	FILE*outFile;
+	outFile=fopen(FileName,"w");
+
+	fprintf(outFile,"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25\n");					// version & identifier: it must be shown.(ver 1.0/2.0/3.0)
+
+	//Write data -------------------------------------------------------------------------
+	for(i=0;i<nop;i++){
+			fprintf(outFile,"%f\t%f\t%f\t",Pa11[i].x,Pa11[i].y,Pa11[i].z);
+			fprintf(outFile,"%f\t%f\t%f\t",Pa11[i].ux,Pa11[i].uy,Pa11[i].uz);
+			fprintf(outFile,"%f\t%d\t%f\t",Pa11[i].m,Pa11[i].p_type,Pa11[i].h);
+			fprintf(outFile,"%f\t%f\t%f\t",Pa11[i].temp,Pa11[i].pres,Pa11[i].rho);
+			fprintf(outFile,"%f\t%f\t%f\t",Pa11[i].rho_ref,Pa11[i].ftotal,Pa12[i].concn);	//check f_total
+			fprintf(outFile,"%f\t%f\t%d\t%d\t",Pa11[i].cc,Pa12[i].vis_t,Pa12[i].ct_boundary,Pa12[i].hf_boundary);
+			fprintf(outFile,"%f\t%f\t%f\t%f\t%f\t%f\n",Pa13[i].lbl_surf,Pa11[i].drho,Pa12[i].denthalpy,Pa12[i].dconcn,Pa12[i].k_turb,Pa12[i].e_turb);
+	}
+
+	fclose(outFile);
+}
+////////////////////////////////////////////////////////////////////////
