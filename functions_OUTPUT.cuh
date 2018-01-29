@@ -247,7 +247,7 @@ void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t5\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t3\n");
 
 	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
 	//for (int_t i=0;i<number_of_particles;i++)
@@ -267,21 +267,29 @@ void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11)
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].pres);
 	}
-	// mass
+	// p_type
+	fprintf(outFile_vtk,"p-type\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
+	}
+	/*// mass
 	fprintf(outFile_vtk,"p_type\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
 	}
-	// print out density
+	//*/
+	/*// print out density
 	fprintf(outFile_vtk,"density_norm\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].rho/Pa11[i].rho_ref);
 	}
-	// volume
+	//*/
+	/*// volume
 	fprintf(outFile_vtk,"rho_ref\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].rho_ref);
 	}
+	//*/
 
 	fclose(outFile_vtk);
 }
