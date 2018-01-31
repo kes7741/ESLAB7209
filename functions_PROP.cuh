@@ -1,4 +1,10 @@
 ////////////////////////////////////////////////////////////////////////
+#define NU0_HB	1.0			//Herschel-Bulkey model parameter
+#define TAU0_HB	18.24		//Herschel-Bulkey model parameter (for lava flow)
+#define K0_HB		1.90		//Herschel-Bulkey model parameter (for lava flow)
+#define	N0_HB		0.53		//Herschel-Bulkey model parameter (for lava flow)
+
+////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real interp1(Real *x_data,Real *y_data,Real tx)
 {
 	//Real y1,y2,y3,y4;

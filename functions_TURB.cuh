@@ -21,6 +21,158 @@ __global__ void KERNEL_clc_strain_rate(int_t nop,int_t pnbs,part11*Pa11,part12*P
 	Real tdwx,tdwy,tdwz;
 	Real tdist;
 	Real uij2;
+	Real Sa;
+
+	non=Pa11[i].number_of_neighbors;
+
+	if(cache_idx<non){
+		// dist
+		tdist=Pa2[tid].dist;
+		// calculate strain rate
+		if(tdist>0){
+			j=Pa2[tid].pnb;
+			// kernel (by esk)???
+			tdwx=Pa2[tid].dwx;
+			tdwy=Pa2[tid].dwy;
+			tdwz=Pa2[tid].dwz;
+			// density
+			rhoi=Pa11[i].rho;
+			// position
+			xi=Pa11[i].x;
+			yi=Pa11[i].y;
+			zi=Pa11[i].z;
+			// velocity
+			uxi=Pa11[i].ux;
+			uyi=Pa11[i].uy;
+			uzi=Pa11[i].uz;
+			// mass
+			mj=Pa11[j].m;
+			// density
+			rhoj=Pa11[j].rho;
+			// position
+			xj=Pa11[j].x;
+			yj=Pa11[j].y;
+			zj=Pa11[j].z;
+			// velocity
+			uxj=Pa11[j].ux;
+			uyj=Pa11[j].uy;
+			uzj=Pa11[j].uz;
+
+			uij2=(uxi-uxj)*(uxi-uxj)+(uyi-uyj)*(uyi-uyj)+(uzi-uzj)*(uzi-uzj);
+
+			cachex[cache_idx]=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(xi-xj)*tdwx*uij2;
+			cachey[cache_idx]=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(yi-yj)*tdwy*uij2;
+			cachez[cache_idx]=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(zi-zj)*tdwz*uij2;
+		}
+	}
+	__syncthreads();
+	uint_t s;
+	for(s=blockDim.x*0.5;s>0;s>>=1){
+		if(cache_idx<s){
+			cachex[cache_idx]+=cachex[cache_idx+s];
+			cachey[cache_idx]+=cachey[cache_idx+s];
+			cachez[cache_idx]+=cachez[cache_idx+s];
+		}
+		__syncthreads();
+	}
+	//if(cache_idx==0) Pa12[i].SR=0;
+	if(cache_idx==0)
+	{
+		Sa=-0.5*(cachex[0]+cachey[0]+cachez[0]);
+		Sa=fmax(1e-20,Sa);
+		Pa12[i].SR=sqrtf(Sa);
+	}
+
+	/*
+	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	int_t j,jj;						// neighbor particle index-j
+	uint_t non,tid;
+	int_t ii=i*pnbs;
+
+	Real mj,rhoi,rhoj;
+
+	Real xi,yi,zi,xj,yj,zj;
+	Real uxi,uxj,uyi,uyj,uzi,uzj;
+	Real tdwx,tdwy,tdwz;
+	Real tdist;
+	Real uij2;
+	Real tmpx,tmpy,tmpz;
+
+	non=Pa11[i].number_of_neighbors;
+	// density
+	rhoi=Pa11[i].rho;
+	// position
+	xi=Pa11[i].x;
+	yi=Pa11[i].y;
+	zi=Pa11[i].z;
+	// velocity
+	uxi=Pa11[i].ux;
+	uyi=Pa11[i].uy;
+	uzi=Pa11[i].uz;
+
+	tmpx=tmpy=tmpz=0.0;
+	for(jj=0;jj<non;jj++){
+		tid=ii+jj;
+		j=Pa2[tid].pnb;
+		// kernel (by esk)???
+		tdwx=Pa2[tid].dwx;
+		tdwy=Pa2[tid].dwy;
+		tdwz=Pa2[tid].dwz;
+		// dist
+		tdist=Pa2[tid].dist;
+
+		// mass
+		mj=Pa11[j].m;
+		// density
+		rhoj=Pa11[j].rho;
+		// position
+		xj=Pa11[j].x;
+		yj=Pa11[j].y;
+		zj=Pa11[j].z;
+		// velocity
+		uxj=Pa11[j].ux;
+		uyj=Pa11[j].uy;
+		uzj=Pa11[j].uz;
+
+		uij2=(uxi-uxj)*(uxi-uxj)+(uyi-uyj)*(uyi-uyj)+(uzi-uzj)*(uzi-uzj);
+
+		// calculate strain rate
+		if(tdist>0){
+			tmpx+=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(xi-xj)*tdwx*uij2;
+			tmpy+=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(yi-yj)*tdwy*uij2;
+			tmpz+=mj*(rhoi+rhoj)/(rhoi*rhoj*tdist*tdist)*(zi-zj)*tdwz*uij2;
+		}
+	}
+
+	// save values to particle array
+	Pa12[i].SR=-0.5*(tmpx+tmpy+tmpz);
+	//*/
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_strain_rate2(int_t nop,int_t pnbs,part11*Pa11,part12*Pa12,part2*Pa2)
+{
+	 __shared__ Real cachex[256];
+	 __shared__ Real cachey[256];
+	 __shared__ Real cachez[256];
+
+	cachex[threadIdx.x]=0;
+	cachey[threadIdx.x]=0;
+	cachez[threadIdx.x]=0;
+
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+
+	Real mj,rhoi,rhoj;
+	Real xi,yi,zi,xj,yj,zj;
+	Real uxi,uxj,uyi,uyj,uzi,uzj;
+	Real tdwx,tdwy,tdwz;
+	Real tdist;
+	Real uij2;
 
 	non=Pa11[i].number_of_neighbors;
 
@@ -159,6 +311,22 @@ __global__ void KERNEL_turb_viscosity(int_t nop,part11*Pa11,part12*Pa12)
 	}
 }
 ////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_HB_viscosity(int_t nop,part11*Pa11,part12*Pa12)
+{
+	// calculation of Herschel-Bulkley Viscosity (Visco-plastic)
+	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	Real SR=Pa12[i].SR;	//strain-rate
+	Real vis_a;
+	if(i>=nop) return;
+
+	//check equation
+	vis_a=TAU0_HB/SR+K0_HB*powf(SR,N0_HB-1);
+	vis_a=fmin(NU0_HB,vis_a);
+
+	Pa12[i].vis_t=vis_a;
+	//Pa12[i].vis_t=0;
+}
+////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_clc_klm_turb(int_t nop,int_t pnbs,part11*Pa11,part12*Pa12,part2*Pa2)
 {
 	 __shared__ Real cachex[256];
@@ -275,7 +443,7 @@ __global__ void KERNEL_clc_klm_turb(int_t nop,int_t pnbs,part11*Pa11,part12*Pa12
 	Real tPi,tPi2,tSR;
 	Real vis_ti,vis_tj;
 	Real k_turbi,k_turbj,e_turbi;
-	
+
 	Real tmpx,tmpy,tmpz;
 
 	non=Pa11[i].number_of_neighbors;
@@ -899,7 +1067,7 @@ __global__ void KERNEL_clc_SPS_stress_tensor(int_t nop,part11*Pa11,part12*Pa12)
 	tSzz=Pa12[i].Szz;
 
 	// please check equations (by esk)!!!
-	tau_xx=trho*(2*tvis_t*tSxx-2/3*(tSxx+tSyy+tSzz))-2/3*trho*CI_SPS*th*th;	
+	tau_xx=trho*(2*tvis_t*tSxx-2/3*(tSxx+tSyy+tSzz))-2/3*trho*CI_SPS*th*th;
 	tau_xy=trho*(2*tvis_t*tSxy);
 	tau_xz=trho*(2*tvis_t*tSxz);
 	tau_yy=trho*(2*tvis_t*tSyy-2/3*(tSxx+tSyy+tSzz))-2/3*trho*CI_SPS*th*th;
@@ -986,7 +1154,7 @@ __global__ void KERNEL_clc_SPS_viscous_force(Real *fvx,Real *fvy,Real *fvz,Real 
 
 		ptypei=p_type_[i];
 		ptypej=p_type_[j];
-		
+
 		visi=viscosity(tempi,ptypei);
 		visj=viscosity(tempj,ptypej);
 
@@ -1013,7 +1181,7 @@ __global__ void KERNEL_clc_SPS_viscous_force(Real *fvx,Real *fvy,Real *fvz,Real 
 		tau_zx_j=tau_xz_j;
 		tau_zy_j=tau_yz_j;
 		tau_zz_j=Szz_[j];
-		
+
 		dwx=dwx_[tid];
 		dwy=dwy_[tid];
 		dwz=dwz_[tid];

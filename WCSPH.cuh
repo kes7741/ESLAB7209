@@ -424,6 +424,7 @@ void WCSPH(int_t*vii,Real*vif)
 
 	//host_particle_array.save_plot_boundary_vtk();
 	//save_plot_boundary_vtk(vii,host_particle_array11);
+	//save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
 
 
 	printf("save boundary particle output.\n");
@@ -713,7 +714,6 @@ void WCSPH(int_t*vii,Real*vif)
 		}
 
 
-
 		// turbulence model: (by esk)!!!
 		if(fv_solve==1){
 			switch(turbulence_model){
@@ -754,6 +754,12 @@ void WCSPH(int_t*vii,Real*vif)
 					KERNEL_clc_SPS_strain_tensor<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,particle_array11,particle_array12,particle_array2);
 					cudaDeviceSynchronize();
 					KERNEL_clc_SPS_stress_tensor<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
+					cudaDeviceSynchronize();
+					break;
+				case HB:
+					KERNEL_clc_strain_rate<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,particle_array11,particle_array12,particle_array2);
+					cudaDeviceSynchronize();
+					KERNEL_HB_viscosity<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
 					cudaDeviceSynchronize();
 					break;
 				default:
@@ -817,7 +823,8 @@ void WCSPH(int_t*vii,Real*vif)
 			//host_particle_array.save_plot_xyz(time-dt,count-1);
 			// save *.vtk files
 			//host_particle_array.save_plot_fluid_vtk(time-dt,count-1);
-			save_plot_fluid_vtk(vii,vif,host_particle_array11);
+			//save_plot_fluid_vtk(vii,vif,host_particle_array11);
+			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
 
 			printf("time=%f [sec]  /  count=%d [step] \n",time-dt,count-1);
 			printf("dt_CFL=%f [sec] /   dt=%f [sec]\n",dt_CFL,dt);

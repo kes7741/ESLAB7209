@@ -93,5 +93,6 @@
 #define K_LM		1
 #define K_E			2
 #define SPS			3
+#define HB      4
 
 #define DIFF_DENSITY	0

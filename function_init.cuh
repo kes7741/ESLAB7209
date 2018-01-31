@@ -203,6 +203,7 @@ void read_solv_input(int_t*vii,Real*vif,const char*FileName)
 			if(strcmp(inputString,"k-lm")==0) turbulence_model=1;
 			if(strcmp(inputString,"k-e")==0) turbulence_model=2;
 			if(strcmp(inputString,"SPS")==0) turbulence_model=3;
+			if(strcmp(inputString,"HB")==0) turbulence_model=4;			
 		}
 		if(strcmp(inputString,"artificial-viscous-force")==0){
 			fscanf(fd,"%s",&inputString);

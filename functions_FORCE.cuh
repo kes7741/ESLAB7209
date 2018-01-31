@@ -247,6 +247,155 @@ __global__ void KERNEL_add_viscous_force(int_t nop,int_t pnbs,part11*Pa11,part2*
 	//*/
 }
 ////////////////////////////////////////////////////////////////////////
+// viscous force calculation
+__global__ void KERNEL_add_HB_viscous_force(int_t nop,int_t pnbs,part11*Pa11,part12*Pa12,part2*Pa2)
+{
+	__shared__ Real cachex[256];
+	__shared__ Real cachey[256];
+	__shared__ Real cachez[256];
+
+	cachex[threadIdx.x]=0;
+	cachey[threadIdx.x]=0;
+	cachez[threadIdx.x]=0;
+
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+	Real mj,rhoi,rhoj;
+	Real ptypei,ptypej;
+	Real tempi,tempj;
+	Real visi,visj;
+	Real xi,yi,zi,xj,yj,zj;
+	Real uxi,uyi,uzi,uxj,uyj,uzj;
+	Real tdwx,tdwy,tdwz,tdist;
+	Real C_v;
+
+	non=Pa11[i].number_of_neighbors;
+
+	if(cache_idx<non){
+		tdist=Pa2[tid].dist;
+		if(tdist>0){
+			j=Pa2[tid].pnb;
+			tdwx=Pa2[tid].dwx;
+			tdwy=Pa2[tid].dwy;
+			tdwz=Pa2[tid].dwz;
+
+			ptypei=Pa11[i].p_type;
+			rhoi=Pa11[i].rho;
+			xi=Pa11[i].x;
+			yi=Pa11[i].y;
+			zi=Pa11[i].z;
+			uxi=Pa11[i].ux;
+			uyi=Pa11[i].uy;
+			uzi=Pa11[i].uz;
+			tempi=Pa11[i].temp;
+
+			ptypej=Pa11[j].p_type;
+			mj=Pa11[j].m;
+			rhoj=Pa11[j].rho;
+			xj=Pa11[j].x;
+			yj=Pa11[j].y;
+			zj=Pa11[j].z;
+			uxj=Pa11[j].ux;
+			uyj=Pa11[j].uy;
+			uzj=Pa11[j].uz;
+			tempj=Pa11[j].temp;
+
+			visi=Pa12[i].vis_t;
+			visj=Pa12[j].vis_t;
+			//C_v=2*(mj/rhoj)*(visj/rhoj)*dwij/dist;
+			C_v=4*(mj/(rhoi*rhoj))*((visi*visj)/(visi+visj+1e-20))*((xi-xj)*tdwx+(yi-yj)*tdwy+(zi-zj)*tdwz)/tdist/tdist;
+
+			cachex[cache_idx]=C_v*(uxi-uxj);
+			cachey[cache_idx]=C_v*(uyi-uyj);
+			cachez[cache_idx]=C_v*(uzi-uzj);
+		}
+	}
+	__syncthreads();
+	uint_t s;
+	for(s=blockDim.x*0.5;s>0;s>>=1){
+		if(cache_idx<s){
+			cachex[cache_idx]+=cachex[cache_idx+s];
+			cachey[cache_idx]+=cachey[cache_idx+s];
+			cachez[cache_idx]+=cachez[cache_idx+s];
+		}
+		__syncthreads();
+	}
+	if(cache_idx==0){
+		Pa11[i].ftotalx+=cachex[0];
+		Pa11[i].ftotaly+=cachey[0];
+		Pa11[i].ftotalz+=cachez[0];
+	}
+
+	/*
+	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	int_t j,jj;						// neighbor particle index-j
+	uint_t non,tid;
+	int_t ii=i*pnbs;
+
+	Real mj,rhoi,rhoj;
+	Real ptypei,ptypej;
+	Real tempi,tempj;
+	Real visi,visj;
+	Real xi,yi,zi,xj,yj,zj;
+	Real uxi,uyi,uzi,uxj,uyj,uzj;
+	Real tdwx,tdwy,tdwz,tdist;
+	Real C_v;
+	Real tmpx,tmpy,tmpz;
+
+	non=Pa11[i].number_of_neighbors;
+	rhoi=Pa11[i].rho;
+	xi=Pa11[i].x;
+	yi=Pa11[i].y;
+	zi=Pa11[i].z;
+	uxi=Pa11[i].ux;
+	uyi=Pa11[i].uy;
+	uzi=Pa11[i].uz;
+	tempi=Pa11[i].temp;
+	ptypei=Pa11[i].p_type;
+	visi=viscosity(tempi,ptypei);
+
+	tmpx=tmpy=tmpz=0.0;
+	for(jj=0;jj<non;jj++){
+		tid=ii+jj;
+		j=Pa2[tid].pnb;
+		tdwx=Pa2[tid].dwx;
+		tdwy=Pa2[tid].dwy;
+		tdwz=Pa2[tid].dwz;
+		tdist=Pa2[tid].dist;
+
+		mj=Pa11[j].m;
+		rhoj=Pa11[j].rho;
+		xj=Pa11[j].x;
+		yj=Pa11[j].y;
+		zj=Pa11[j].z;
+		uxj=Pa11[j].ux;
+		uyj=Pa11[j].uy;
+		uzj=Pa11[j].uz;
+		tempj=Pa11[j].temp;
+		ptypej=Pa11[j].p_type;
+
+		visj=viscosity(tempj,ptypej);
+		if(tdist>0){
+			//C_v=2*(mj/rhoj)*(visj/rhoj)*dwij/dist;
+			C_v=4*(mj/(rhoi*rhoj))*((visi*visj)/(visi+visj))*((xi-xj)*tdwx+(yi-yj)*tdwy+(zi-zj)*tdwz)/tdist/tdist;
+
+			tmpx+=C_v*(uxi-uxj);
+			tmpy+=C_v*(uyi-uyj);
+			tmpz+=C_v*(uzi-uzj);
+		}
+	}
+	// save values
+	Pa11[i].ftotalx+=tmpx;
+	Pa11[i].ftotaly+=tmpy;
+	Pa11[i].ftotalz+=tmpz;
+	//*/
+}
+////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_add_artificial_viscous_force(int_t nop,int_t pnbs,Real tsoundspeed,part11*Pa11,part2*Pa2)
 {
 	__shared__ Real cachex[256];
@@ -861,7 +1010,7 @@ __global__ void KERNEL_add_surface_tension(int_t nop,int_t pnbs,int_t tdim,part1
 	int_t j,jj;						// neighbor particle index-j
 	uint_t non,tid;
 	int_t ii=i*pnbs;
-	
+
 	int_t ptypei,ptypej;
 	Real sigmai,mj,rhoi,rhoj,hi,tempi; //mi,
 	Real xi,yi,zi,xj,yj,zj;
@@ -1166,7 +1315,7 @@ __global__ void KERNEL_add_boundary_force(int_t nop,int_t pnbs,Real tC_repulsive
 	//*/
 }
 ////////////////////////////////////////////////////////////////////////
-// natural convection force (boussinesq approximation) 
+// natural convection force (boussinesq approximation)
 __global__ void KERNEL_add_boussinesq_force(int_t nop,int_t pnbs,int_t tdim,part11*Pa11,part2*Pa2)
 {
 	__shared__ Real cachen[256];
@@ -1329,6 +1478,11 @@ void calculate_force(int_t*vii,Real*vif,part11*Pa11,part12*Pa12,part13*Pa13,part
 			case SPS:
 				//KERNEL_clc_SPS_viscous_force<<<number_of_particles,thread_size>>>(fvx,fvy,fvz,Sxx,Sxy,Sxz,Syy,Syz,Szz,number_of_neighbors,pnb,m,rho,x,y,z,ux,uy,uz,temp,dwx,dwy,dwz,dist,pnb_size,dim,p_type);
 				KERNEL_add_SPS_viscous_force<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa12,Pa2);
+				cudaDeviceSynchronize();
+				break;
+			case HB:
+				//printf("add_viscous_force()\n");
+				KERNEL_add_HB_viscous_force<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa12,Pa2);
 				cudaDeviceSynchronize();
 				break;
 			default:
