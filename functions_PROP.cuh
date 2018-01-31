@@ -426,19 +426,20 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
-__global__ void KERNEL_EOS(int_t nop,Real tgamma,Real tsoundspeed,part11*Pa11)
+__global__ void KERNEL_EOS(int_t nop,Real tgamma,Real tsoundspeed,Real trho0_eos, part11*Pa11)
 {
 	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
 	if(i>=nop) return;
 
-	Real rhoi,ci,tB;
+	Real rhoi,ci,tB,rho0;
 	Real tpressure;
 	Real rho_refi=Pa11[i].rho_ref;
 	uint_t p_typei=Pa11[i].p_type;
 
 	rhoi=Pa11[i].rho;
 	ci=tsoundspeed;
-	tB = ci*ci*5000;
+	rho0=fmax(1000,trho0_eos);	//minimum rho0... need to discuss later
+	tB = ci*ci*rho0/tgamma;
 
 	p_typei = abs(p_typei);
 
@@ -538,4 +539,17 @@ __global__ void KERNEL_find_psedo_max(int_t nop,part11*Pa11,part2*Pa2,Real*prove
 		&prove=cachex[0];
 	}
 	*/
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__  Real K_to_eta(Real tK_stiff)
+{
+	// corium data
+	Real x_data1[5]={0,1000,5000,25000,100000};
+	Real y_data1[5]={1.0,1.8,2.3,2.5,2.5};
+
+	Real y=1;
+
+	y=interp1(x_data1,y_data1,tK_stiff);
+
+	return y;
 }

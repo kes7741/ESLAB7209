@@ -10,7 +10,7 @@
 #define		fluid_type							vii[7]		// fluid type
 #define		material_type						vii[8]		// material type(Water / Metal)
 #define		simulation_type					vii[9]		// simulation type(single_phase / two_phase)
-#define		freq_cell								vii[10]		// cell initialization frequency	
+#define		freq_cell								vii[10]		// cell initialization frequency
 #define		flag_z_index						vii[11]		// flag for z-indexing
 #define		flag_timestep_update		vii[12]		// flag for varying timestep update
 #define		nb_cell_type						vii[13]		// neighbor cell type
@@ -28,7 +28,7 @@
 #define		boussinesq_solve				vii[25]		// solve boussinesq approximation based natural convection?
 #define		interface_solve					vii[26]		// solve interface sharpness force?
 #define		surf_model							vii[27]		// surface tension model
-#define		xsph_solve							vii[28]		// solve xsph ? 
+#define		xsph_solve							vii[28]		// solve xsph ?
 #define		kgc_solve								vii[29]		// solve kernel gradient correction ?
 #define		delSPH_solve						vii[30]		// solve delta-SPH ?
 #define		delSPH_model						vii[31]		// delta SPH model
@@ -71,7 +71,7 @@
 //psh:: ISPH input
 #define		drho_th									vif[15]		// density convergence criterion
 #define		dp_th										vif[16]		// pressure convergence criterion
-#define		p_relaxation						vif[17]		// relaxation factor for PCISPH pressure 
+#define		p_relaxation						vif[17]		// relaxation factor for PCISPH pressure
 //
 //solution variables
 #define		x_min										vif[18]
@@ -81,7 +81,8 @@
 #define		z_min										vif[22]
 #define		z_max										vif[23]
 #define		nd_ref									vif[24]
-#define		soundspeed								vif[25]
+#define		soundspeed							vif[25]
+#define		rho0_eos								vif[26]
 ////////////////////////////////////////////////////////////////////////
 void read_solv_input(int_t*vii,Real*vif,const char*FileName)
 {
@@ -293,7 +294,11 @@ void read_solv_input(int_t*vii,Real*vif,const char*FileName)
 		if(strcmp(inputString,"sound-speed:")==0){
 			fscanf(fd,"%s",&inputString);
 			soundspeed=atof(inputString);
-		}		
+		}
+		if(strcmp(inputString,"reference-density-eos:")==0){
+			fscanf(fd,"%s",&inputString);
+			rho0_eos=atof(inputString);
+		}
 		if(strcmp(inputString,"gamma")==0){
 			fscanf(fd,"%s",&inputString);
 			fscanf(fd,"%s",&inputString);
@@ -465,9 +470,9 @@ int_t gpu_count_particle_numbers2(const char*FileName)
 		idx+=1;
 	}
 	fclose(inFile);
-  	
+
   	nop=idx-1;
-	
+
 	return nop;
 }
 ////////////////////////////////////////////////////////////////////////
@@ -609,17 +614,17 @@ void read_input2(int_t*vii,part11*Pa11,part12*Pa12)
           Pa11[i].y0=atof(buffer);
           break;
         case inp_z:
-          Pa11[i].z=atof(buffer);          
-          Pa11[i].z0=atof(buffer);          
+          Pa11[i].z=atof(buffer);
+          Pa11[i].z0=atof(buffer);
           break;
         case inp_ux:
           //C[i]=atof(buffer);
-          Pa11[i].ux=atof(buffer);    
-          Pa11[i].ux0=atof(buffer);    
+          Pa11[i].ux=atof(buffer);
+          Pa11[i].ux0=atof(buffer);
           break;
         case inp_uy:
-          Pa11[i].uy=atof(buffer);        
-          Pa11[i].uy0=atof(buffer);        
+          Pa11[i].uy=atof(buffer);
+          Pa11[i].uy0=atof(buffer);
           break;
         case inp_uz:
           Pa11[i].uz=atof(buffer);
@@ -701,14 +706,14 @@ void read_input3(int_t*vii,part11*Pa11,part12*Pa12)
   int nov,nop;   //number of data, number of variables, number of partices
   int j, end;
   int lbl_var[100];
-  nov = 0; 
+  nov = 0;
   nop = 0;
- 
+
   FILE*inFile;
   inFile=fopen(FileName,"r");
 
-  // count number of variables_________________  
-  fgets(buffer, buffer_size - 1, inFile);		// read first line 
+  // count number of variables_________________
+  fgets(buffer, buffer_size - 1, inFile);		// read first line
   tok = strtok(buffer, "\t");					// line segmentation
   while(tok != NULL){
 	  tmp = atoi(tok);
@@ -716,7 +721,7 @@ void read_input3(int_t*vii,part11*Pa11,part12*Pa12)
 	  nov++;									// count number of segments(variables)
 	  tok = strtok(NULL,"\t");
   }
- 
+
   // read data_________________
   while(1){
 	for(j=0;j<nov;j++){
@@ -733,17 +738,17 @@ void read_input3(int_t*vii,part11*Pa11,part12*Pa12)
 		  Pa11[nop].y0=atof(buffer);
 		  break;
 		case inp_z:
-		  Pa11[nop].z=atof(buffer);          
-		  Pa11[nop].z0=atof(buffer);          
+		  Pa11[nop].z=atof(buffer);
+		  Pa11[nop].z0=atof(buffer);
 		  break;
 		case inp_ux:
 		  //C[i]=atof(buffer);
-		  Pa11[nop].ux=atof(buffer);    
-		  Pa11[nop].ux0=atof(buffer);    
+		  Pa11[nop].ux=atof(buffer);
+		  Pa11[nop].ux0=atof(buffer);
 		  break;
 		case inp_uy:
-		  Pa11[nop].uy=atof(buffer);        
-		  Pa11[nop].uy0=atof(buffer);        
+		  Pa11[nop].uy=atof(buffer);
+		  Pa11[nop].uy0=atof(buffer);
 		  break;
 		case inp_uz:
 		  Pa11[nop].uz=atof(buffer);

@@ -26,6 +26,8 @@ void WCSPH(int_t*vii,Real*vif)
 			printf("...........................................................\n\n");
 		}
 	}
+	cudaSetDevice(1);		//device set-up
+
 	// print ------------------------------------------------------------------------------------------
 	printf(" ------------------------------------------------------------\n");
 	printf(" SOPHIA_gpu v.1.0 \n");
@@ -175,6 +177,8 @@ void WCSPH(int_t*vii,Real*vif)
 	//*/
 	// proving variables:max_umag,max_ftotal
 	Real max_umag,max_ftotal;
+	Real dt_CFL, V_MAX, K_stiff, eta;		// variables for timestep control
+	Real h0=host_particle_array11[0].h;	//initial kernel distance
 
 	//-------------------------------------------------------------------------------------------------
 	// ##. GENERATE CELLS
@@ -656,7 +660,7 @@ void WCSPH(int_t*vii,Real*vif)
 		// calculate pressure
 		//particle_array.calculate_pressure();
 
-		KERNEL_EOS<<<b,t>>>(number_of_particles,gamma,soundspeed,particle_array11);
+		KERNEL_EOS<<<b,t>>>(number_of_particles,gamma,soundspeed,rho0_eos,particle_array11);
 		cudaDeviceSynchronize();
 
 		//-------------------------------------------------------------------------------------------------
@@ -770,21 +774,34 @@ void WCSPH(int_t*vii,Real*vif)
 		//-------------------------------------------------------------------------------------------------
 		// ##. TIME STEP CONTROL & UPDATE
 		//-------------------------------------------------------------------------------------------------
-		//* ------------ max function modify
-		if(flag_timestep_update==1){
+
+		// time-step update
+		time+=dt;
+		++count;
+
+		//* ------------ estimate new timestep (Goswami & Pajarola(2011))
+		if((flag_timestep_update==1)&(((count-1)%100)==0)){		//timestep is updated every 10 steps
 			kernel_copy_max<<<b,t>>>(number_of_particles,particle_array11,max_ux,max_ft);
 			cudaDeviceSynchronize();
 			max_umag=*(thrust::max_element(thrust::device_ptr<Real>(max_ux),thrust::device_ptr<Real>(max_ux+number_of_particles)));
 			max_ftotal=*(thrust::max_element(thrust::device_ptr<Real>(max_ft),thrust::device_ptr<Real>(max_ft+number_of_particles)));
+
+			//timestep control
+			dt_CFL=0.2*h0/soundspeed;		//CFL limit
+			V_MAX=max_umag+sqrtf(h0*max_ftotal);		//V_MAX
+			K_stiff=soundspeed*soundspeed*rho0_eos/gamma;		//K stiffness update_turbulence_parameters
+			eta=K_to_eta(K_stiff);
+
+			if(V_MAX<0.05*soundspeed)		//V_MAX<0.4c
+			{
+				dt=eta*dt_CFL;
+			}
+			else
+			{
+				dt=dt_CFL;
+			}
 		}
 		//*/
-
-		// A time-step control needs to be added.
-		// time-step calculation
-		// dt=clc_timestep(particle,number_of_particles,dt0);
-		// time-step update
-		time+=dt;
-		++count;
 
 		//-------------------------------------------------------------------------------------------------
 		// ##. Print Output Files
@@ -803,7 +820,9 @@ void WCSPH(int_t*vii,Real*vif)
 			save_plot_fluid_vtk(vii,vif,host_particle_array11);
 
 			printf("time=%f [sec]  /  count=%d [step] \n",time-dt,count-1);
-			printf("max_umag=%f\tmax_ftotal=%f\n\n",max_umag,max_ftotal);
+			printf("dt_CFL=%f [sec] /   dt=%f [sec]\n",dt_CFL,dt);
+			printf("max_umag=%f    /   V_MAX=%f    /   max_ftotal=%f\n\n",max_umag,V_MAX,max_ftotal);
+
 		}
 	}
 
@@ -811,7 +830,7 @@ void WCSPH(int_t*vii,Real*vif)
 	// ##. Save Restart File
 	//-------------------------------------------------------------------------------------------------
 	// Save restart files
-	if(true){
+	if(false){
 		// Save Restart File
 		save_restart(vii,vif,host_particle_array11,host_particle_array12,host_particle_array13);
 	}
