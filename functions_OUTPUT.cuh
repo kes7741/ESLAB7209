@@ -362,16 +362,28 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
 	}
-	//*// strain_rate
+	/*// strain_rate
 	fprintf(outFile_vtk,"SR\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa12[i].SR);
 	}
 	//*/
-	//*// vicosity
+	/*// vicosity
 	fprintf(outFile_vtk,"vis_t\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa12[i].vis_t);
+	}
+	//*/
+	//*// enthalpy
+	fprintf(outFile_vtk,"enthalpy\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa12[i].enthalpy/1e3);
+	}
+	//*/
+	//*// denthalpy
+	fprintf(outFile_vtk,"denthalpy\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa12[i].denthalpy/1e3);
 	}
 	//*/
 	/*// mass
