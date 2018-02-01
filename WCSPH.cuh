@@ -786,25 +786,29 @@ void WCSPH(int_t*vii,Real*vif)
 		++count;
 
 		//* ------------ estimate new timestep (Goswami & Pajarola(2011))
-		if((flag_timestep_update==1)&(((count-1)%100)==0)){		//timestep is updated every 10 steps
+		if((count%freq_cell)==0){		//timestep is updated every 10 steps
 			kernel_copy_max<<<b,t>>>(number_of_particles,particle_array11,max_ux,max_ft);
 			cudaDeviceSynchronize();
 			max_umag=*(thrust::max_element(thrust::device_ptr<Real>(max_ux),thrust::device_ptr<Real>(max_ux+number_of_particles)));
 			max_ftotal=*(thrust::max_element(thrust::device_ptr<Real>(max_ft),thrust::device_ptr<Real>(max_ft+number_of_particles)));
 
-			//timestep control
-			dt_CFL=0.2*h0/soundspeed;		//CFL limit
-			V_MAX=max_umag+sqrtf(h0*max_ftotal);		//V_MAX
+			//CFL timestep limit
+			dt_CFL=0.4*h0/soundspeed;												//CFL limit
+			V_MAX=max_umag+sqrtf(h0*max_ftotal);						//V_MAX
 			K_stiff=soundspeed*soundspeed*rho0_eos/gamma;		//K stiffness update_turbulence_parameters
 			eta=K_to_eta(K_stiff);
 
-			if(V_MAX<0.05*soundspeed)		//V_MAX<0.4c
+			//timestep-control
+			if(flag_timestep_update==1)
 			{
-				dt=eta*dt_CFL;
-			}
-			else
-			{
-				dt=dt_CFL;
+				if(V_MAX<0.1*soundspeed)
+				{
+					dt=eta*dt_CFL;
+				}
+				else
+				{
+					dt=dt_CFL;
+				}
 			}
 		}
 		//*/
@@ -826,9 +830,9 @@ void WCSPH(int_t*vii,Real*vif)
 			//save_plot_fluid_vtk(vii,vif,host_particle_array11);
 			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
 
-			printf("time=%f [sec]  /  count=%d [step] \n",time-dt,count-1);
-			printf("dt_CFL=%f [sec] /   dt=%f [sec]\n",dt_CFL,dt);
-			printf("max_umag=%f    /   V_MAX=%f    /   max_ftotal=%f\n\n",max_umag,V_MAX,max_ftotal);
+			printf("time=%f [sec]\tcount=%d [step]\n",time-dt,count-1);
+			printf("dt_CFL=%f [sec]\tdt=%f [sec]\n",dt_CFL,dt);
+			printf("max_umag=%f\tV_MAX=%f\t\tmax_ftotal=%f\n\n",max_umag,V_MAX,max_ftotal);
 
 		}
 	}
