@@ -1,5 +1,5 @@
 
-#define 	vii_size		64
+#define 	vii_size		64  //
 #define 	vif_size		32
 
 //#define Real float
