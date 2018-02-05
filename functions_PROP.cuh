@@ -70,8 +70,6 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 	//Real y_data2[6] = { 298.15, 347.15, 399.15, 873.15, 1100.2, 2573.2 };
 
 	// concrete data (siliceous concrete) - (Sevon, 2008, CCI experiment)
-	//Real x_data2[5] = { 0, 41000, 132000, 2474500, 3383062 };
-	//Real y_data2[5] = { 298.15, 347.15, 399.15, 2273.15, 3000 };
 	Real x_data2[4] = { 0, 41000, 132000, 2474500 };
 	Real y_data2[4] = { 298.15, 347.15, 399.15, 2273.15 };
 
@@ -86,11 +84,9 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 	switch(tp_type){
 		case CORIUM:
 			y=interp1(x_data1,y_data1,tenthalpy);
-			//cond=fmin(vis,50.0);
 			break;
 		case CONCRETE:
 			y=interp2(x_data2,y_data2,4,tenthalpy);
-			//cond=fmin(vis,50.0);
 			break;
 		case MCCI_CORIUM:
 			y = interp2(x_data1, y_data1, 5, tenthalpy);
@@ -104,12 +100,11 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 		case IVR_VESSEL:
 			y = interp1(x_data3, y_data3, tenthalpy);
 			break;
-		case BOUNDARY:
-			y = interp1(x_data3, y_data3, tenthalpy);
-			break;
+		// case BOUNDARY:
+		// 	y = interp1(x_data3, y_data3, tenthalpy);
+		// 	break;
 		default:
 			y=interp1(x_data1,y_data1,tenthalpy);
-			//cond=fmin(vis,50.0);
 			break;
 	}
 	return y;
@@ -125,8 +120,6 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 	//Real x_data2[6] = { 298.15, 347.15, 399.15, 873.15, 1100.2,  2573.2 };
 
 	// concrete data (siliceous concrete) - (Sevon, 2008, CCI experiment)
-	//Real y_data2[5] = { 0, 41000, 132000, 2474500, 3383062};
-	//Real x_data2[5] = { 298.15, 347.15, 399.15, 2273.15, 3000};
 	Real y_data2[4] = { 0, 41000, 132000, 2474500 };
 	Real x_data2[4] = { 298.15, 347.15, 399.15, 2273.15 };
 
@@ -140,12 +133,10 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 
 	switch(p_type){
 		case CORIUM:
-			y=interp1(x_data1,y_data1,temp);
-			//cond=fmin(vis,50.0);
+			y=interp1(x_data1,y_data1,temp);		
 			break;
 		case CONCRETE:
-			y=interp2(x_data2,y_data2,4,temp);
-			//cond=fmin(vis,50.0);
+			y=interp2(x_data2,y_data2,4,temp);		
 			break;
 		case MCCI_CORIUM:
 			//y = interp1(x_data1, y_data1, temp);
@@ -160,12 +151,11 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 		case IVR_VESSEL:
 			y = interp1(x_data3, y_data3, temp);
 			break;
-		case BOUNDARY:
-			y = interp1(x_data3, y_data3, temp);
-			break;
+		// case BOUNDARY:
+		// 	y = interp1(x_data3, y_data3, temp);
+		// 	break;
 		default:
 			y=interp1(x_data1,y_data1,temp);
-			//cond=fmin(vis,50.0);
 			break;
 	}
 	return y;
@@ -210,10 +200,10 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			vis = interp1(x_data1, y_data1, temp);
 			vis = fmin(vis, 100.0);
 			break;
-		case BOUNDARY:
-			vis=interp1(x_data1,y_data1,temp);
-			vis=fmin(vis,100.0);
-			break;
+		// case BOUNDARY:
+		// 	vis=interp1(x_data1,y_data1,temp);
+		// 	vis=fmin(vis,100.0);
+		// 	break;
 		default:
 			vis=0.001;	// water viscosity
 			break;
@@ -260,10 +250,10 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			//cond = 24.1;
 			cond = 24.1 * 50;
 			break;
-		case BOUNDARY:
-			//cond = 24.1;
-			cond = 24.1 * 50;
-			break;
+		// case BOUNDARY:
+		// 	//cond = 24.1;
+		// 	cond = 24.1 * 50;
+		// 	break;
 		default:
 			cond=1.65*200;
 			break;
@@ -314,8 +304,6 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			y=0;
 			break;
 		case CONCRETE:
-			//y=interp1(x_data2,y_data2,temp);
-			//y=fmin(vis,50.0);
 			y=0;
 			break;
 		case MCCI_CORIUM:
@@ -331,8 +319,6 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			y=0;
 			break;
 		default:
-			//y=interp1(x_data1,y_data1,temp);
-			//y=fmin(vis,50.0);
 			y=0;
 			break;
 	}
@@ -366,9 +352,6 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 		case MCCI_CORIUM:
 			y = 6000.;
 			break;
-		case BOUNDARY:
-			y=5890.0;
-			break;
 		case IVR_CORIUM:
 			y=5890.0;
 			break;
@@ -380,6 +363,9 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 			//y=7020;
 			y=5890.0;		//temporary
 			break;
+		// case BOUNDARY:
+		// 	y=5890.0;
+		// 	break;
 		default:
 			y=1000.0;
 			break;
@@ -413,8 +399,8 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 		case CONCRETE:
 			y=3.81e-4;
 			break;
-		case BOUNDARY:
-			y=3.81e-4 * 2;
+		case MCCI_CORIUM:
+			y=3.81e-4;
 			break;
 		case IVR_CORIUM:
 			y=3.81e-4 * 2;
@@ -425,6 +411,9 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 		case IVR_VESSEL:
 			y = 3.81e-4 * 2;
 			break;
+		// case BOUNDARY:
+		// 	y=3.81e-4 * 2;
+		// 	break;
 		default:
 			y=3.81e-4;
 			break;
@@ -469,9 +458,6 @@ __global__ void KERNEL_EOS(int_t nop,Real tgamma,Real tsoundspeed,Real trho0_eos
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
 	}
-
-	//if(i==5609) printf("eos %f %f %f %f %f %f\n",rho_refi,rhoi,ci,tB,pow(rhoi/rho_refi,tgamma),pow(2.0,3.0));
-
 	Pa11[i].pres=tpressure;
 }
 ////////////////////////////////////////////////////////////////////////
@@ -499,7 +485,7 @@ __host__ __device__  Real DEVICE_clc_heat_generation(Real temp, uint_t p_type)
 	}
 
 	if(p_type==MCCI_CORIUM){
-		qs=1.29e9;			// volumetric heat generation rate [W/m^3]
+		qs=9.6e6;				// volumetric heat generation rate [W/m^3]
 	}
 
 	return qs;
