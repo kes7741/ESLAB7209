@@ -133,8 +133,6 @@ __global__ void KERNEL_clc_euler_update(int_t nop,const Real tdt,const Real tu_l
 		Pa11[i].uz0=tuz;												// update z-directional velocity
 	}
 
-	Pa11[i].rho0=Pa11[i].rho;												// update desnity
-
 	// update temperature
 	/*
 	temp=temp_[i];
@@ -593,13 +591,16 @@ void update_properties(int_t*vii,Real*vif,part11*Pa11,part2*Pa2)
 			// Eulerian time integration function
 			KERNEL_clc_euler_update<<<b,t>>>(number_of_particles,dt,u_limit,Pa11);
 			cudaDeviceSynchronize();
-			if(rho_type==Continuity){
-				KERNEL_clc_precor_update_continuity<<<b,t>>>(number_of_particles,dt,Pa11);
-				cudaDeviceSynchronize();
+			if(rho_type==Continuity){				
 				if(count%freq_mass_sum==0){
-					KERNEL_clc_mass_sum<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa2);
+					KERNEL_clc_density_renormalization_norm<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa2);
+					cudaDeviceSynchronize();
+				}else{
+					KERNEL_clc_precor_update_continuity<<<b,t>>>(number_of_particles,dt,Pa11);
 					cudaDeviceSynchronize();
 				}
+				KERNEL_clc_update_density<<<b,t>>>(number_of_particles,Pa11);
+				cudaDeviceSynchronize();
 			}
 			break;
 		case Pre_Cor:
@@ -617,7 +618,6 @@ void update_properties(int_t*vii,Real*vif,part11*Pa11,part2*Pa2)
 				KERNEL_clc_precor_update_continuity<<<b,t>>>(number_of_particles,dt,Pa11);
 				cudaDeviceSynchronize();
 				if(count%freq_mass_sum==0){
-					//KERNEL_clc_density_renormalization<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa2);
 					KERNEL_clc_density_renormalization_norm<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,Pa11,Pa2);
 					cudaDeviceSynchronize();
 				}
@@ -640,9 +640,8 @@ void update_properties_enthalpy(int_t*vii,Real*vif,part12*Pa12)
 	switch(time_type){
 		case Euler:
 			// Eulerian time integration function
-			//KERNEL_clc_euler_update<<<number_of_particles,1>>>(p_type,x,y,z,x0,y0,z0,ux,uy,uz,ux0,uy0,uz0,ftotalx,ftotaly,ftotalz,rho,rho0,temp,temp0,dtemp,dt,dim,u_limit);
-			//KERNEL_clc_euler_update<<<b,t>>>(number_of_particles,dt,u_limit,particle_array);
-			//cudaDeviceSynchronize();
+			KERNEL_clc_precor_update_enthalpy<<<b,t>>>(number_of_particles,dt,Pa12);
+			cudaDeviceSynchronize();
 			break;
 		case Pre_Cor:
 			// Predictor-Corrector time integration function

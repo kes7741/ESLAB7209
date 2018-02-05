@@ -496,17 +496,9 @@ void WCSPH(int_t*vii,Real*vif)
 				KERNEL_clc_predictor_continuity<<<b,t>>>(number_of_particles,dt,particle_array11);
 				cudaDeviceSynchronize();
 			}
-
-			//particle_array.update_reference_density();
-			KERNEL_clc_reference_density<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
-			cudaDeviceSynchronize();
-
 			if(con_solve==1){
 				//particle_array.predictor_enthalpy(dt);
-				//particle_array.calculate_EnthalpytoTemp();
 				KERNEL_clc_predictor_enthalpy<<<b,t>>>(number_of_particles,dt,particle_array12);
-				cudaDeviceSynchronize();
-				KERNEL_clc_EnthalpytoTemp<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
 				cudaDeviceSynchronize();
 			}
 			if(concn_solve==1){
@@ -514,6 +506,14 @@ void WCSPH(int_t*vii,Real*vif)
 				KERNEL_clc_predictor_concn<<<b,t>>>(number_of_particles,dt,particle_array12);
 				cudaDeviceSynchronize();
 			}
+		}
+		//particle_array.update_reference_density();
+		KERNEL_clc_reference_density<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+		cudaDeviceSynchronize();
+		if(con_solve==1){
+			//particle_array.calculate_EnthalpytoTemp();
+			KERNEL_clc_EnthalpytoTemp<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
+			cudaDeviceSynchronize();
 		}
 		//-------------------------------------------------------------------------------------------------
 		// ##. NEIGHBOR SEARCH
