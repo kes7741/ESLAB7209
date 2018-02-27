@@ -77,6 +77,10 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 	Real x_data3[5] = { 47838, 151494, 262962, 380730, 503454 };
 	Real y_data3[5] = { 373.15, 573.15, 773.15, 973.15, 1169.15 };
 
+	// water data
+	Real x_data4[2] = { 0, 418700};
+	Real y_data4[2] = { 273.15, 373.15};
+
 	Real y;
 
 	tp_type = abs(tp_type);
@@ -104,7 +108,7 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 		// 	y = interp1(x_data3, y_data3, tenthalpy);
 		// 	break;
 		default:
-			y=interp1(x_data1,y_data1,tenthalpy);
+			y=interp2(x_data4,y_data4,2,tenthalpy);
 			break;
 	}
 	return y;
@@ -126,6 +130,10 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 	// stainless steel data
 	Real y_data3[5] = { 47838, 151494, 262962, 380730, 503454 };
 	Real x_data3[5] = { 373.15, 573.15, 773.15, 973.15, 1169.15 };
+
+	// water data
+	Real y_data4[2] = { 0, 418700};
+	Real x_data4[2] = { 273.15, 373.15};
 
 	Real y;
 
@@ -155,7 +163,7 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 		// 	y = interp1(x_data3, y_data3, temp);
 		// 	break;
 		default:
-			y=interp1(x_data1,y_data1,temp);
+			y=interp2(x_data4,y_data4,2,temp);
 			break;
 	}
 	return y;
@@ -170,6 +178,10 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 	// concrete data
 	Real x_data2[5]={300,1000,1500,2000,2500};
 	Real y_data2[5]={50,12,5,0.1,0.01};
+
+	// water data
+	Real x_data3[8] = { 273.16, 283.15, 293.15, 303.15, 323.15, 343.15, 363.15, 373.15 };
+	Real y_data3[8] = { 0.0017914, 0.001306, 0.0010016, 0.0007972, 0.0005465, 0.0004035, 0.0003142, 0.0002816 };
 
 	Real vis;
 
@@ -205,7 +217,8 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 		// 	vis=fmin(vis,100.0);
 		// 	break;
 		default:
-			vis=0.001;	// water viscosity
+			vis = interp2(x_data3, y_data3, 8, temp);
+			//vis=0.001;	// water viscosity
 			break;
 	}
 	return vis;
@@ -255,7 +268,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 		// 	cond = 24.1 * 50;
 		// 	break;
 		default:
-			cond=1.65*200;
+			cond=0.58;		//water conductivity
 			break;
 	}
 	return cond;
@@ -319,7 +332,8 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			y=0;
 			break;
 		default:
-			y=0;
+			y=1.38e-6;  				//0.58*0.01/4187.	// diffusivity for modeling salt-finger by Monaghan's 
+			//y=1.43e-7;				// physical diffusivity * 0.1 for modeling salt-finger by Monaghan's 
 			break;
 	}
 	return y;
@@ -338,6 +352,10 @@ __host__ __device__ Real soundspeed(uint_t p_type)
 ////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn)
 {
+	//water density - temp data
+	Real x_data1[9] = { 273.25, 288.15, 298.15, 308.15, 313.15, 328.15, 343.15, 363.15, 373.15 };
+	Real y_data1[9] = { 999.85, 999.1, 997.05, 994.03, 992.22, 985.69, 977.76, 965.31, 958.35 };
+
 	Real y;
 
 	tp_type = abs(tp_type);
@@ -367,7 +385,8 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 		// 	y=5890.0;
 		// 	break;
 		default:
-			y=1000.0;
+			y = interp2(x_data1, y_data1, 9, ttemp);
+			//y=1000.0;
 			break;
 	}
 	return y;
@@ -377,12 +396,9 @@ __host__ __device__ Real reference_density2(uint_t p_type,Real temp,Real m,Real 
 {
 	Real y;
 	Real vol,s;
-
 	s=h/1.5;
 	vol=pow(s,d);
-
 	y = m/vol;
-
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
@@ -415,7 +431,7 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 		// 	y=3.81e-4 * 2;
 		// 	break;
 		default:
-			y=3.81e-4;
+			y=2.1e-4;		// water thermal expansion coefficient(beta) at 293.15K 
 			break;
 	}
 	return y;
