@@ -26,7 +26,7 @@ void WCSPH(int_t*vii,Real*vif)
 			printf("...........................................................\n\n");
 		}
 	}
-	cudaSetDevice(1);		//device set-up
+	cudaSetDevice(0);		//device set-up
 
 	// print ------------------------------------------------------------------------------------------
 	printf(" ------------------------------------------------------------\n");
@@ -508,7 +508,8 @@ void WCSPH(int_t*vii,Real*vif)
 			}
 		}
 		//particle_array.update_reference_density();
-		KERNEL_clc_reference_density<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+		//KERNEL_clc_reference_density<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+		KERNEL_clc_reference_density_diffusion<<<b,t>>>(number_of_particles,dim,particle_array11,particle_array12);
 		cudaDeviceSynchronize();
 		if(con_solve==1){
 			//particle_array.calculate_EnthalpytoTemp();
@@ -828,8 +829,7 @@ void WCSPH(int_t*vii,Real*vif)
 			//host_particle_array.save_plot_xyz(time-dt,count-1);
 			// save *.vtk files
 			//host_particle_array.save_plot_fluid_vtk(time-dt,count-1);
-			//save_plot_fluid_vtk(vii,vif,host_particle_array11);
-			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
+			save_plot_fluid_vtk(vii,vif,host_particle_array11,host_particle_array12);
 
 			printf("time=%f [sec]\tcount=%d [step]\n",time-dt,count-1);
 			printf("dt_CFL=%f [sec]\tdt=%f [sec]\n",dt_CFL,dt);
