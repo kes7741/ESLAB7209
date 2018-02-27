@@ -204,7 +204,7 @@ void save_plot_boundary_vtk(int_t*vii,part11*Pa11){
 	fclose(outFile_vtk);
 }
 ////////////////////////////////////////////////////////////////////////
-void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11)
+void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 {
 	int_t i,nop;//,nob;
 	nop=number_of_particles;
@@ -247,163 +247,28 @@ void save_plot_fluid_vtk(int_t*vii,Real*vif,part11*Pa11)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t3\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t4\n");
 
-	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
-	//for (int_t i=0;i<number_of_particles;i++)
-	//{
-	//	if (p_type[i] > 0)
-	//	{
-	//		outFile_vtk << lbl_surf[i] << endl;
-	//	}
-	//}
 	// temperature
 	fprintf(outFile_vtk,"temperature\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].temp);
 	}
 	// pressure
-	fprintf(outFile_vtk,"pressure\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"concentration\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].pres);
+			fprintf(outFile_vtk,"%f\n",Pa12[i].concn);
 	}
 	// p_type
-	fprintf(outFile_vtk,"p-type\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"mass\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
-	}
-	/*// mass
-	fprintf(outFile_vtk,"p_type\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
-	}
-	//*/
-	/*// print out density
-	fprintf(outFile_vtk,"density_norm\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].rho/Pa11[i].rho_ref);
-	}
-	//*/
-	/*// volume
-	fprintf(outFile_vtk,"rho_ref\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].rho_ref);
-	}
-	//*/
-
-	fclose(outFile_vtk);
-}
-////////////////////////////////////////////////////////////////////////
-void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
-{
-	int_t i,nop;//,nob;
-	nop=number_of_particles;
-	//nob=number_of_boundaries;
-	//int_t Nparticle=nop-nob;						// number of fluid particles
-	int_t Nparticle=nop;									// number of fluid particles
-
-
-	// Filename: It should be series of frame numbers(nameXXX.vtk) for the sake of auto-reading in PARAVIEW.
-	char FileName_vtk[256];
-	sprintf(FileName_vtk,"./plotdata/fluid_%dstp.vtk",count-1);
-	// If the file already exists, its contents are discarded and create the new one.
-	FILE*outFile_vtk;
-	outFile_vtk=fopen(FileName_vtk,"w");
-
-	fprintf(outFile_vtk,"# vtk DataFile Version 3.0\n");					// version & identifier: it must be shown.(ver 1.0/2.0/3.0)
-	fprintf(outFile_vtk,"Print out results in vtk format\n");			// header: description of file, it never exceeds 256 characters
-	fprintf(outFile_vtk,"ASCII\n");																// format of data (ACSII / BINARY)
-	fprintf(outFile_vtk,"DATASET POLYDATA\n");										// define DATASET format: 'POLYDATA' is proper to represent SPH particles
-
-	//Define SPH particles---------------------------------------------------------------
-	fprintf(outFile_vtk,"POINTS\t%d\tfloat\n",Nparticle);					// define particles position as POINTS
-	// print out (x,y,z) coordinates of particles
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\t%f\t%f\t\n",Pa11[i].x0,Pa11[i].y0,Pa11[i].z0);
-	}
-	// define point coordinate as a particle position
-	fprintf(outFile_vtk,"VERTICES\t%d\t%d\n",Nparticle,2*Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"1\t%d\n",i);
+			fprintf(outFile_vtk,"%e\n",Pa11[i].m);
 	}
 
-	//Write data -------------------------------------------------------------------------
-	// declare each point has its own data
-	fprintf(outFile_vtk,"POINT_DATA\t%d\n",Nparticle);
-
-	//outFile_vtk << "SCALARS" << "\t" << "index" << "\t" << "int" << endl;						// assign the index of particles at POINTS
-	//outFile_vtk << "LOOKUP_TABLE" << "\t" << "default" << endl;									// default
-	//for (int i=number_of_boundaries;i<number_of_particles;i++)
-	//{	outFile_vtk << i << endl;	}
-
-	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t5\n");
-
-	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
-	//for (int_t i=0;i<number_of_particles;i++)
-	//{
-	//	if (p_type[i] > 0)
-	//	{
-	//		outFile_vtk << lbl_surf[i] << endl;
-	//	}
-	//}
-	// temperature
-	fprintf(outFile_vtk,"temperature\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"density\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].temp);
+			fprintf(outFile_vtk,"%f\n",Pa11[i].rho);
 	}
-	// pressure
-	fprintf(outFile_vtk,"pressure\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].pres);
-	}
-	// p_type
-	fprintf(outFile_vtk,"p-type\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
-	}
-	/*// strain_rate
-	fprintf(outFile_vtk,"SR\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].SR);
-	}
-	//*/
-	/*// vicosity
-	fprintf(outFile_vtk,"vis_t\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].vis_t);
-	}
-	//*/
-	//*// enthalpy
-	fprintf(outFile_vtk,"enthalpy\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].enthalpy/1e3);
-	}
-	//*/
-	//*// denthalpy
-	fprintf(outFile_vtk,"denthalpy\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].denthalpy/1e3);
-	}
-	//*/
-	/*// mass
-	fprintf(outFile_vtk,"p_type\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
-	}
-	//*/
-	/*// print out density
-	fprintf(outFile_vtk,"density_norm\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].rho/Pa11[i].rho_ref);
-	}
-	//*/
-	/*// volume
-	fprintf(outFile_vtk,"rho_ref\t1\t%d\tfloat\n",Nparticle);
-	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].rho_ref);
-	}
-	//*/
 
 	fclose(outFile_vtk);
 }
