@@ -52,8 +52,7 @@ __global__ void KERNEL_clc_conduction(int_t nop,int_t pnbs,int_t tdim,part11*Pa1
 	non=Pa11[i].number_of_neighbors;
 
 	if(cache_idx<non){
-		tdist=Pa2[tid].dist;																					// distance between i and j particles (dist)
-
+		tdist=Pa2[tid].dist;																						// distance between i and j particles (dist)
 		if(tdist>0.){
 			j=Pa2[tid].pnb;																							// neighbor particle index: j
 			tdwij=Pa2[tid].dwij;																					// kernel derivative function between i and j particles (dWij)
@@ -67,9 +66,9 @@ __global__ void KERNEL_clc_conduction(int_t nop,int_t pnbs,int_t tdim,part11*Pa1
 			ptypej=Pa11[j].p_type;
 			rhoj=Pa11[j].rho;																							// j particle density
 			tempj=Pa11[j].temp;																						// j particle temperature
-			lbl_surf_i=Pa13[i].lbl_surf;
+			// lbl_surf_i=Pa13[i].lbl_surf;
 
-			eta=0.001*hi;																										// eta=0.01*h (for smoothing the singularity when dist is close to zero)
+			eta=0.01*hi;																										// eta=0.01*h (for smoothing the singularity when dist is close to zero)
 
 			kci = conductivity(tempi, ptypei);		// i particle conductivity
 			kcj = conductivity(tempj, ptypej);		// j particle conductivity
@@ -100,7 +99,7 @@ __global__ void KERNEL_clc_conduction(int_t nop,int_t pnbs,int_t tdim,part11*Pa1
 		if(cache_idx<s) cache[cache_idx]+=cache[cache_idx+s];
 		__syncthreads();
 	}
-	if(cache_idx==0) Pa12[i].denthalpy=(cache[0]);  //Pa12[i].denthalpy=(cache[0]+sum_hf+sum_hs)*((Real)(1.0-Pa12[i].ct_boundary));
+	if(cache_idx==0) Pa12[i].denthalpy=(cache[0])*((Real)(1.0-Pa12[i].ct_boundary));  	//Pa12[i].denthalpy=(cache[0]+sum_hf+sum_hs)*((Real)(1.0-Pa12[i].ct_boundary));
 }
 ////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_clc_heat_source_sink_term(int_t nop,int_t pnbs,int_t tdim,part11*Pa11,part12*Pa12,part13*Pa13)
@@ -130,5 +129,5 @@ __global__ void KERNEL_clc_heat_source_sink_term(int_t nop,int_t pnbs,int_t tdim
 	//boil_flux= DEVICE_clc_boiling_h(tempi, lbl_surf_i, ptypei)*area;							// heat flux of boiling heat transfer [W/m^2]
 	heat_source=DEVICE_clc_heat_generation(tempi, ptypei)/tmp_rho_ref;								// Volumetric heat genration rate [W/m^3]
 
-	Pa12[i].denthalpy=Pa12[i].denthalpy+radiation_flux+boil_flux+heat_source;
+	Pa12[i].denthalpy=(Pa12[i].denthalpy+radiation_flux+boil_flux+heat_source)*((Real)(1.0-Pa12[i].ct_boundary));
 }
