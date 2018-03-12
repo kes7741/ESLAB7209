@@ -166,18 +166,20 @@ void WCSPH(int_t*vii,Real*vif)
 
 	// set up proves
 		// set up proves
-	Real*max_ux,*max_ft;
+	Real*max_ux,*max_ft,*max_c_dt;
 	cudaMalloc((void**)&max_ux,malloc_size*sizeof(Real));
 	cudaMalloc((void**)&max_ft,malloc_size*sizeof(Real));
+	cudaMalloc((void**)&max_c_dt,malloc_size*sizeof(Real));
 	cudaMemset(max_ux,0,malloc_size*sizeof(Real));
 	cudaMemset(max_ft,0,malloc_size*sizeof(Real));
+	cudaMemset(max_c_dt,0,malloc_size*sizeof(Real));
 	/*
 	thrust::device_ptr<Real> thrust_umag_ptr=thrust::device_pointer_cast(particle_array.ux);
 	thrust::device_ptr<Real> thrust_ftotal_ptr=thrust::device_pointer_cast(particle_array.ftotal);
 	//*/
 	// proving variables:max_umag,max_ftotal
-	Real max_umag,max_ftotal;
-	Real dt_CFL, V_MAX, K_stiff, eta;		// variables for timestep control
+	Real max_umag,max_ftotal,max_c;
+	Real dt_CFL,dt_fmax, V_MAX, K_stiff, eta;		// variables for timestep control
 	Real h0=host_particle_array11[0].h;	//initial kernel distance
 
 	//-------------------------------------------------------------------------------------------------
@@ -788,18 +790,21 @@ void WCSPH(int_t*vii,Real*vif)
 
 		//* ------------ estimate new timestep (Goswami & Pajarola(2011))
 		if((count%freq_cell)==0){		//timestep is updated every 10 steps
-			kernel_copy_max<<<b,t>>>(number_of_particles,particle_array11,max_ux,max_ft);
+			//kernel_copy_max<<<b,t>>>(number_of_particles,particle_array11,max_ux,max_ft);
+			kernel_copy_max2<<<b,t>>>(number_of_particles,particle_array11,max_ux,max_ft,max_c_dt,soundspeed);
 			cudaDeviceSynchronize();
 			max_umag=*(thrust::max_element(thrust::device_ptr<Real>(max_ux),thrust::device_ptr<Real>(max_ux+number_of_particles)));
 			max_ftotal=*(thrust::max_element(thrust::device_ptr<Real>(max_ft),thrust::device_ptr<Real>(max_ft+number_of_particles)));
+			max_c=*(thrust::max_element(thrust::device_ptr<Real>(max_c_dt),thrust::device_ptr<Real>(max_ft+number_of_particles)));
 
 			//CFL timestep limit
-			dt_CFL=0.4*h0/soundspeed;												//CFL limit
+			dt_CFL=0.4*h0/max_c;														//CFL limit
+			dt_fmax=0.25*sqrt(h0/max_ftotal);								//fmax limit
 			V_MAX=max_umag+sqrtf(h0*max_ftotal);						//V_MAX
 			K_stiff=soundspeed*soundspeed*rho0_eos/gamma;		//K stiffness update_turbulence_parameters
 			eta=K_to_eta(K_stiff);
 
-			//timestep-control
+			/*//timestep-control
 			if(flag_timestep_update==1)
 			{
 				if(V_MAX<0.1*soundspeed)
@@ -811,8 +816,9 @@ void WCSPH(int_t*vii,Real*vif)
 					dt=dt_CFL;
 				}
 			}
+			*/
 		}
-		//*/
+		//
 
 		//-------------------------------------------------------------------------------------------------
 		// ##. Print Output Files
@@ -832,8 +838,8 @@ void WCSPH(int_t*vii,Real*vif)
 			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
 
 			printf("time=%f [sec]\tcount=%d [step]\n",time-dt,count-1);
-			printf("dt_CFL=%f [sec]\tdt=%f [sec]\n",dt_CFL,dt);
-			printf("max_umag=%f\tV_MAX=%f\t\tmax_ftotal=%f\n\n",max_umag,V_MAX,max_ftotal);
+			printf("dt=%f [sec]\tdt_CFL=%f [sec]\tdt_fmax=%f [sec]\n",dt,dt_CFL,dt_fmax);
+			printf("max_c=%f\t\tmax_umag=%f\tmax_V=%f\t\tmax_ftotal=%f\n\n",max_c,max_umag,V_MAX,max_ftotal);
 
 		}
 	}

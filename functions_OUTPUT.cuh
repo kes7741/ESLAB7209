@@ -8,6 +8,25 @@ __global__ void kernel_copy_max(int_t nop,part11*Pa11,Real*mux,Real*mft)
 	mft[i]=Pa11[i].ftotal;
 }
 ////////////////////////////////////////////////////////////////////////
+__global__ void kernel_copy_max2(int_t nop,part11*Pa11,Real*mux,Real*mft,Real*mct,Real c)
+{
+	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	Real c_dt=c;
+
+	if(i>=nop) return;
+
+	mux[i]=Pa11[i].ux;
+	mft[i]=Pa11[i].ftotal;
+	if(Pa11[i].drho>0)
+	{
+		mct[i]=c+0.6*(c+Pa11[i].h*abs(Pa11[i].drho/Pa11[i].rho));
+	}
+	else
+	{
+		mct[i]=c;		
+	}
+}
+////////////////////////////////////////////////////////////////////////
 void particle_check_results(uint_t tcount,int_t nop,part11*Pa11,part13*Pa13)
 {
 	char FileName_xyz[256];
