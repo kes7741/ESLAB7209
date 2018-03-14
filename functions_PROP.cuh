@@ -79,6 +79,10 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 	Real x_data3[5] = { 47838, 151494, 262962, 380730, 503454 };
 	Real y_data3[5] = { 373.15, 573.15, 773.15, 973.15, 1169.15 };
 
+	// fluid/boundary... need to be fixed
+	Real x_data4[5] = { 2000.00, 3000.00, 4000.00, 5000.00, 6000.00 };
+	Real y_data4[5] = { 200.00, 300.00, 400.00, 500.00, 600.00 };
+
 	Real y;
 
 	tp_type = abs(tp_type);
@@ -105,7 +109,10 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 			y = interp1(x_data3, y_data3, tenthalpy);
 			break;
 		case BOUNDARY:
-			y = interp1(x_data3, y_data3, tenthalpy);
+			y = interp1(x_data4, y_data4, tenthalpy);
+			break;
+		case FLUID:
+			y = interp1(x_data4, y_data4, tenthalpy);
 			break;
 		default:
 			y=interp1(x_data1,y_data1,tenthalpy);
@@ -134,6 +141,10 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 	Real y_data3[5] = { 47838, 151494, 262962, 380730, 503454 };
 	Real x_data3[5] = { 373.15, 573.15, 773.15, 973.15, 1169.15 };
 
+	// fluid/boundary... need to be fixed
+	Real y_data4[5] = { 2000.00, 3000.00, 4000.00, 5000.00, 6000.00 };
+	Real x_data4[5] = { 200.00, 300.00, 400.00, 500.00, 600.00 };
+
 	Real y;
 
 	p_type = abs(p_type);
@@ -161,7 +172,10 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 			y = interp1(x_data3, y_data3, temp);
 			break;
 		case BOUNDARY:
-			y = interp1(x_data3, y_data3, temp);
+			y = interp1(x_data4, y_data4, temp);
+			break;
+		case FLUID:
+			y = interp1(x_data4, y_data4, temp);
 			break;
 		default:
 			y=interp1(x_data1,y_data1,temp);
@@ -211,9 +225,10 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			vis = fmin(vis, 100.0);
 			break;
 		case BOUNDARY:
-			vis=interp1(x_data1,y_data1,temp);
-			vis=fmin(vis,100.0);
-			break;
+			vis=1e-3;
+		case FLUID:
+			vis=1e-3;
+		break;
 		default:
 			vis=0.001;	// water viscosity
 			break;
@@ -262,7 +277,11 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case BOUNDARY:
 			//cond = 24.1;
-			cond = 24.1 * 50;
+			cond = 0.6;
+			break;
+		case FLUID:
+			//cond = 24.1;
+			cond = 0.6;
 			break;
 		default:
 			cond=1.65*200;
@@ -296,6 +315,14 @@ __host__ __device__ Real sigma(Real temp,uint_t p_type)
 		case IVR_VESSEL:
 			y = 71.97 * 1e-3;
 			break;
+		case BOUNDARY:
+			//cond = 24.1;
+			y = 0.072;
+			break;
+		case FLUID:
+			//cond = 24.1;
+			y = 0.072;
+			break;
 		default:
 			y=0.072;		// water surface tension
 			break;
@@ -328,6 +355,14 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			y=0;
 			break;
 		case IVR_VESSEL:
+			y=0;
+			break;
+		case BOUNDARY:
+			//cond = 24.1;
+			y=0;
+			break;
+		case FLUID:
+			//cond = 24.1;
 			y=0;
 			break;
 		default:
@@ -366,9 +401,6 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 		case MCCI_CORIUM:
 			y = 6000.;
 			break;
-		case BOUNDARY:
-			y=5890.0;
-			break;
 		case IVR_CORIUM:
 			y=5890.0;
 			break;
@@ -379,6 +411,12 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 		case IVR_VESSEL:
 			//y=7020;
 			y=5890.0;		//temporary
+			break;
+		case BOUNDARY:
+			y=1000.0;
+			break;
+		case FLUID:
+			y=1000.0;
 			break;
 		default:
 			y=1000.0;
@@ -413,9 +451,6 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 		case CONCRETE:
 			y=3.81e-4;
 			break;
-		case BOUNDARY:
-			y=3.81e-4 * 2;
-			break;
 		case IVR_CORIUM:
 			y=3.81e-4 * 2;
 			break;
@@ -424,6 +459,12 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 			break;
 		case IVR_VESSEL:
 			y = 3.81e-4 * 2;
+			break;
+		case BOUNDARY:
+			y=3.81e-4;
+			break;
+		case FLUID:
+			y=3.81e-4;
 			break;
 		default:
 			y=3.81e-4;
@@ -456,13 +497,16 @@ __global__ void KERNEL_EOS(int_t nop,Real tgamma,Real tsoundspeed,Real trho0_eos
 		case CONCRETE:
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
-		case BOUNDARY:
-			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
-			break;
 		case IVR_CORIUM:
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
 		case IVR_METAL:
+			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
+			break;
+		case BOUNDARY:
+			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
+			break;
+		case FLUID:
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
 		default:

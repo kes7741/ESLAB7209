@@ -837,9 +837,9 @@ void WCSPH(int_t*vii,Real*vif)
 			//save_plot_fluid_vtk(vii,vif,host_particle_array11);
 			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
 
-			printf("time=%f [sec]\tcount=%d [step]\n",time-dt,count-1);
-			printf("dt=%f [sec]\tdt_CFL=%f [sec]\tdt_fmax=%f [sec]\n",dt,dt_CFL,dt_fmax);
-			printf("max_c=%f\t\tmax_umag=%f\tmax_V=%f\t\tmax_ftotal=%f\n\n",max_c,max_umag,V_MAX,max_ftotal);
+			printf("time=%2.5f [sec]\tcount=%d [step]\n",time-dt,count-1);
+			printf("dt=%2.5f [sec]\tdt_CFL=%2.5f [sec]\tdt_fmax=%2.5f [sec]\n",dt,dt_CFL,dt_fmax);
+			printf("max_c=%2.2f [m/s]\tmax_ux=%2.2e [m/s]\tmax_V=%2.2f [m/s]\tmax_ftotal=%2.2f [m^2/s]\n\n",max_c,max_umag,V_MAX,max_ftotal);
 
 		}
 	}

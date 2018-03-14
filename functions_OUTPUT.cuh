@@ -17,13 +17,14 @@ __global__ void kernel_copy_max2(int_t nop,part11*Pa11,Real*mux,Real*mft,Real*mc
 
 	mux[i]=Pa11[i].ux;
 	mft[i]=Pa11[i].ftotal;
+
 	if(Pa11[i].drho>0)
 	{
 		mct[i]=c+0.6*(c+Pa11[i].h*abs(Pa11[i].drho/Pa11[i].rho));
 	}
 	else
 	{
-		mct[i]=c;		
+		mct[i]=c;
 	}
 }
 ////////////////////////////////////////////////////////////////////////
@@ -356,7 +357,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t5\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t4\n");
 
 	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
 	//for (int_t i=0;i<number_of_particles;i++)
@@ -367,7 +368,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//	}
 	//}
 	// temperature
-	fprintf(outFile_vtk,"temperature\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"temp\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].temp);
 	}
@@ -394,15 +395,21 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	}
 	//*/
 	//*// enthalpy
-	fprintf(outFile_vtk,"enthalpy\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"density\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].enthalpy/1e3);
+			fprintf(outFile_vtk,"%f\n",Pa11[i].rho);
 	}
 	//*/
-	//*// denthalpy
-	fprintf(outFile_vtk,"denthalpy\t1\t%d\tfloat\n",Nparticle);
+	/*// denthalpy
+	fprintf(outFile_vtk,"ftotalx\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa12[i].denthalpy/1e3);
+			fprintf(outFile_vtk,"%f\n",Pa11[i].ftotalx);
+	}
+	//*/
+	/*// denthalpy
+	fprintf(outFile_vtk,"ftotaly\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa11[i].ftotaly);
 	}
 	//*/
 	/*// mass
