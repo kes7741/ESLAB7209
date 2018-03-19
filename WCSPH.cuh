@@ -780,6 +780,9 @@ void WCSPH(int_t*vii,Real*vif)
 			cudaDeviceSynchronize();
 		}
 
+		// update mass;
+		KERNEL_update_reference_mass<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+
 		//-------------------------------------------------------------------------------------------------
 		// ##. TIME STEP CONTROL & UPDATE
 		//-------------------------------------------------------------------------------------------------

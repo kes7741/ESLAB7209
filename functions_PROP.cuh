@@ -4,6 +4,9 @@
 #define K0_HB		1.90		//Herschel-Bulkey model parameter (for lava flow)
 #define	N0_HB		0.53		//Herschel-Bulkey model parameter (for lava flow)
 
+#define rho0A		2000		// reference density for species A (f=1)
+#define rho0B		1000		// reference density for species B (f=0)
+
 ////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real interp1(Real *x_data,Real *y_data,Real tx)
 {
