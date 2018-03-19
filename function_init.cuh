@@ -203,7 +203,7 @@ void read_solv_input(int_t*vii,Real*vif,const char*FileName)
 			if(strcmp(inputString,"k-lm")==0) turbulence_model=1;
 			if(strcmp(inputString,"k-e")==0) turbulence_model=2;
 			if(strcmp(inputString,"SPS")==0) turbulence_model=3;
-			if(strcmp(inputString,"HB")==0) turbulence_model=4;			
+			if(strcmp(inputString,"HB")==0) turbulence_model=4;
 		}
 		if(strcmp(inputString,"artificial-viscous-force")==0){
 			fscanf(fd,"%s",&inputString);
@@ -523,6 +523,7 @@ int_t gpu_count_boundary_numbers(const char*FileName)
 #define inp_dconcn  23
 #define inp_dk  24
 #define inp_de  25
+#define inp_stoh 	26
 ////////////////////////////////////////////////////////////////////////
 void read_input2(int_t*vii,part11*Pa11,part12*Pa12)
 {
@@ -728,6 +729,9 @@ void read_input3(int_t*vii,part11*Pa11,part12*Pa12)
 	for(j=0;j<nov;j++){
 	  end = fscanf(inFile,"%s\n",buffer);
 	  if (end == -1) break;
+
+		Pa11[nop].stoh=1.5;		// default stoh=1.5
+
 	  switch(lbl_var[j]){
 		case inp_x:
 		  //A[i]=atof(buffer);
@@ -807,6 +811,9 @@ void read_input3(int_t*vii,part11*Pa11,part12*Pa12)
 		case inp_de:
 		  Pa12[nop].de_turb=atof(buffer);
 		  break;
+		case inp_stoh:
+			Pa11[nop].stoh=atof(buffer);
+		break;
 		default:
 		  printf("undefined variable name");
 		  break;

@@ -441,6 +441,19 @@ __host__ __device__ Real reference_density2(uint_t p_type,Real temp,Real m,Real 
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density3(uint_t p_type,Real temp,Real m,Real h,Real stoh, int d)
+{
+	Real y;
+	Real vol,s;
+
+	s=h/stoh;
+	vol=pow(s,d);
+
+	y = m/vol;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 {
 	Real y;
