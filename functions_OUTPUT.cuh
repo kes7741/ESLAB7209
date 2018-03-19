@@ -357,7 +357,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t4\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t5\n");
 
 	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
 	//for (int_t i=0;i<number_of_particles;i++)
@@ -410,6 +410,13 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	fprintf(outFile_vtk,"ftotaly\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].ftotaly);
+	}
+	//*/
+	//*/
+	//*// concn
+	fprintf(outFile_vtk,"concn\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa12[i].concn);
 	}
 	//*/
 	/*// mass

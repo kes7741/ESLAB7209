@@ -338,7 +338,7 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 
 	switch(p_type){
 		case CORIUM:
-			y=0;
+			y=0.000005;
 			break;
 		case CONCRETE:
 			//y=interp1(x_data2,y_data2,temp);
