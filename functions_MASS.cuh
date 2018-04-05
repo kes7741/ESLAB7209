@@ -131,6 +131,14 @@ __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,p
 		vol=pow(s,d);
 		m=(rho0A*vol*tconcn)+(rho0B*vol*(1-tconcn));
 	}
+
+	if (tp_type == SALT_WATER)
+	{
+		s=h/stoh;
+		vol=pow(s,d);
+		m=(1100*vol*tconcn)+(1000*vol*(1-tconcn));
+	}
+
 	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
 	Pa11[i].m=m;
 }

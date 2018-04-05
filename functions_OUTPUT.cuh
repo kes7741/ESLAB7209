@@ -357,7 +357,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t5\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t3\n");
 
 	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
 	//for (int_t i=0;i<number_of_particles;i++)
@@ -367,21 +367,24 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//		outFile_vtk << lbl_surf[i] << endl;
 	//	}
 	//}
-	// temperature
+	//*// temperature
 	fprintf(outFile_vtk,"temp\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].temp);
 	}
-	// pressure
+	//*/
+	/*// pressure
 	fprintf(outFile_vtk,"pressure\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].pres);
 	}
-	// p_type
+	//*/
+	/*// p_type
 	fprintf(outFile_vtk,"p-type\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
 	}
+	//*/
 	/*// strain_rate
 	fprintf(outFile_vtk,"SR\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
@@ -394,7 +397,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 			fprintf(outFile_vtk,"%f\n",Pa12[i].vis_t);
 	}
 	//*/
-	//*// enthalpy
+	//*// denstity
 	fprintf(outFile_vtk,"density\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].rho);
@@ -420,15 +423,15 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	}
 	//*/
 	/*// mass
-	fprintf(outFile_vtk,"p_type\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"mass\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%d\n",Pa11[i].p_type);
+			fprintf(outFile_vtk,"%f\n",Pa11[i].m);
 	}
 	//*/
 	/*// print out density
-	fprintf(outFile_vtk,"density_norm\t1\t%d\tfloat\n",Nparticle);
+	fprintf(outFile_vtk,"density_ref\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
-			fprintf(outFile_vtk,"%f\n",Pa11[i].rho/Pa11[i].rho_ref);
+			fprintf(outFile_vtk,"%f\n",Pa11[i].rho_ref);
 	}
 	//*/
 	/*// volume

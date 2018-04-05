@@ -90,7 +90,7 @@ __global__ void KERNEL_clc_conduction(int_t nop,int_t pnbs,int_t tdim,part11*Pa1
 			// sum_hs=qsi*voli/mi;
 			//sum_hs = 10000 *(ptypei==MCCI_CORIUM);
 
-			sum_con_H=((4.0*mj*kcj*kci)/(rhoi*rhoj*(kci+kcj)))*(tempi-tempj)*tdwij/((tdist)+eta*eta);		// Heat Conduction Equation
+			sum_con_H=((4.0*mj*kcj*kci)/(rhoi*rhoj*(kci+kcj+0.0001)))*(tempi-tempj)*tdwij/((tdist)+eta*eta);		// Heat Conduction Equation
 			cache[cache_idx]=sum_con_H;
 		}
 	}

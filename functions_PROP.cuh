@@ -8,6 +8,8 @@
 #define rho0B		1000		// reference density for species B (f=0)
 
 ////////////////////////////////////////////////////////////////////////
+#define SALT_WATER 2
+////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real interp1(Real *x_data,Real *y_data,Real tx)
 {
 	//Real y1,y2,y3,y4;
@@ -86,6 +88,10 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 	Real x_data4[5] = { 2000.00, 3000.00, 4000.00, 5000.00, 6000.00 };
 	Real y_data4[5] = { 200.00, 300.00, 400.00, 500.00, 600.00 };
 
+	// water (in liquid phase: 270K ~ 360K)
+	Real x_data5[5] = { 42161, 125860, 209460, 293160, 377110 };
+	Real y_data5[5] = { 283.16, 303.16, 323.16, 343.16, 363.16 };
+
 	Real y;
 
 	tp_type = abs(tp_type);
@@ -116,6 +122,9 @@ __host__ __device__ Real htoT(Real tenthalpy,uint_t tp_type)
 			break;
 		case FLUID:
 			y = interp1(x_data4, y_data4, tenthalpy);
+			break;
+		case SALT_WATER:		// need to be fixed
+			y = interp1(x_data5, y_data5, tenthalpy);
 			break;
 		default:
 			y=interp1(x_data1,y_data1,tenthalpy);
@@ -148,6 +157,10 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 	Real y_data4[5] = { 2000.00, 3000.00, 4000.00, 5000.00, 6000.00 };
 	Real x_data4[5] = { 200.00, 300.00, 400.00, 500.00, 600.00 };
 
+	// water (in liquid phase: 270K ~ 360K)
+	Real y_data5[5] = { 42161, 125860, 209460, 293160, 377110 };
+	Real x_data5[5] = { 283.16, 303.16, 323.16, 343.16, 363.16 };
+
 	Real y;
 
 	p_type = abs(p_type);
@@ -179,6 +192,9 @@ __host__ __device__ Real Ttoh(Real temp,uint_t p_type)
 			break;
 		case FLUID:
 			y = interp1(x_data4, y_data4, temp);
+			break;
+		case SALT_WATER:		// need to be fixed
+			y = interp1(x_data5, y_data5, temp);
 			break;
 		default:
 			y=interp1(x_data1,y_data1,temp);
@@ -229,9 +245,13 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			break;
 		case BOUNDARY:
 			vis=1e-3;
+			break;
 		case FLUID:
 			vis=1e-3;
-		break;
+			break;
+		case SALT_WATER:
+			vis=1e-3;
+			break;
 		default:
 			vis=0.001;	// water viscosity
 			break;
@@ -280,11 +300,15 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case BOUNDARY:
 			//cond = 24.1;
-			cond = 0.6;
+			cond = 0.0;
 			break;
 		case FLUID:
 			//cond = 24.1;
 			cond = 0.6;
+			break;
+		case SALT_WATER:
+			//cond = 24.1;
+			cond = 2.0;
 			break;
 		default:
 			cond=1.65*200;
@@ -323,6 +347,10 @@ __host__ __device__ Real sigma(Real temp,uint_t p_type)
 			y = 0.072;
 			break;
 		case FLUID:
+			//cond = 24.1;
+			y = 0.072;
+			break;
+		case SALT_WATER:
 			//cond = 24.1;
 			y = 0.072;
 			break;
@@ -367,6 +395,10 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 		case FLUID:
 			//cond = 24.1;
 			y=0;
+			break;
+		case SALT_WATER:
+			//cond = 24.1;
+			y = 0.000005;
 			break;
 		default:
 			//y=interp1(x_data1,y_data1,temp);
@@ -419,6 +451,9 @@ __host__ __device__ Real reference_density(uint_t tp_type,Real ttemp,Real tconcn
 			y=1000.0;
 			break;
 		case FLUID:
+			y=1000.0;
+			break;
+		case SALT_WATER:
 			y=1000.0;
 			break;
 		default:
@@ -482,6 +517,9 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 		case FLUID:
 			y=3.81e-4;
 			break;
+		case SALT_WATER:
+			y=3.81e-4;
+			break;
 		default:
 			y=3.81e-4;
 			break;
@@ -523,6 +561,9 @@ __global__ void KERNEL_EOS(int_t nop,Real tgamma,Real tsoundspeed,Real trho0_eos
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
 		case FLUID:
+			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
+			break;
+		case SALT_WATER:
 			tpressure=tB*(pow(rhoi/rho_refi,tgamma)-1.0);
 			break;
 		default:
