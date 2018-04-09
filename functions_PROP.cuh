@@ -307,8 +307,8 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			cond = 0.6;
 			break;
 		case SALT_WATER:
-			//cond = 24.1;
-			cond = 2.0;
+			//cond = 0.7; 0.56~0.67 W/mK (water)
+			cond = 30.0;
 			break;
 		default:
 			cond=1.65*200;
@@ -398,7 +398,8 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 24.1;
-			y = 0.000005;
+			//y = 0.000005;
+			y = 0.0000001;
 			break;
 		default:
 			//y=interp1(x_data1,y_data1,temp);
@@ -483,6 +484,46 @@ __host__ __device__ Real reference_density3(uint_t p_type,Real temp,Real m,Real 
 
 	s=h/stoh;
 	vol=pow(s,d);
+
+	y = m/vol;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real cvT(Real temp)
+{
+	Real cv;
+
+	//cv=4E-06*temp*temp-0.002*temp+1.2641;	// water
+	cv=0.0028*temp+0.25;	// test fluid
+
+	return cv;
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_init_double_diffusive(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)	// for double diffusive convection
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+
+	Real temp,CV0;
+
+	temp=Pa11[i].temp;
+	CV0=cvT(temp);
+
+	Pa11[i].p001=CV0;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density4(uint_t p_type,Real temp,Real m,Real h,Real stoh,Real CV0, int d)
+{
+	Real y;
+	Real vol,s;
+	Real CV;
+
+	CV=cvT(temp);
+
+	s=h/stoh;
+	vol=pow(s,d)*CV/CV0;
 
 	y = m/vol;
 

@@ -26,7 +26,7 @@ void WCSPH(int_t*vii,Real*vif)
 			printf("...........................................................\n\n");
 		}
 	}
-	cudaSetDevice(1);		//device set-up
+	cudaSetDevice(0);		//device set-up
 
 	// print ------------------------------------------------------------------------------------------
 	printf(" ------------------------------------------------------------\n");
@@ -475,6 +475,12 @@ void WCSPH(int_t*vii,Real*vif)
 		}
 		//system("pause");
 	}
+
+
+	// initialize CV0 for double diffusive convection... temporary function... only for DDC simulation... esk
+	KERNEL_init_double_diffusive<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+	//....
+
 
 	//-------------------------------------------------------------------------------------------------
 	// ##. CODE MAIN LOOP
