@@ -116,13 +116,15 @@ __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,p
 	//Real trhoA;
 	uint_t tp_type;
 	Real ttemp;
-	Real m,h,stoh;
+	Real m,mw,h,stoh;
 	Real tconcn;
 	Real s,vol;				// space(s) and volume(vol)
+
 	int d=k_vii[1];		// dimension
 
 	tp_type=Pa11[i].p_type;
 	m=Pa11[i].m;
+	mw=Pa11[i].p002;
 	h=Pa11[i].h;
 	stoh=Pa11[i].stoh;
 	ttemp=Pa11[i].temp;
@@ -139,7 +141,7 @@ __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,p
 	{
 		s=h/stoh;
 		vol=pow(s,d);
-		m=(960*vol*tconcn)+(1000*vol*(1-tconcn));
+		m=mw+Kddc*vol*tconcn;
 	}
 
 	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);

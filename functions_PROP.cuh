@@ -7,6 +7,8 @@
 #define rho0A		2000		// reference density for species A (f=1)
 #define rho0B		1000		// reference density for species B (f=0)
 
+#define Kddc	70				// rho_sw = rho_w + K*f
+
 ////////////////////////////////////////////////////////////////////////
 #define SALT_WATER 2
 ////////////////////////////////////////////////////////////////////////
@@ -250,7 +252,7 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			vis=1e-3;
 			break;
 		case SALT_WATER:
-			vis=1e-3;
+			vis=1e-1;
 			break;
 		default:
 			vis=0.001;	// water viscosity
@@ -308,7 +310,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 0.7; 0.56~0.67 W/mK (water)
-			cond = 30.0;
+			cond = 20.0;
 			break;
 		default:
 			cond=1.65*200;
@@ -399,7 +401,7 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 		case SALT_WATER:
 			//cond = 24.1;
 			//y = 0.000005;
-			y = 0.0000001;
+			y = 0.0000005;
 			break;
 		default:
 			//y=interp1(x_data1,y_data1,temp);
@@ -495,7 +497,10 @@ __host__ __device__ Real cvT(Real temp)
 	Real cv;
 
 	//cv=4E-06*temp*temp-0.002*temp+1.2641;	// water
-	cv=0.0028*temp+0.25;	// test fluid
+	//cv=0.0028*temp+0.25;	// test fluid
+	//cv = 0.0012*temp + 0.6667;
+	cv=0.001*temp+0.7391;
+
 
 	return cv;
 }
@@ -505,13 +510,27 @@ __global__ void KERNEL_init_double_diffusive(int_t nop,int_t*k_vii,part11*Pa11,p
 	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
 	if(i>=nop) return;
 
-
 	Real temp,CV0;
+
+	//Real trhoA;
+	Real m,h,stoh;
+	Real tconcn;
+	Real s,vol;				// space(s) and volume(vol)
+	int d=k_vii[1];		// dimension
+
+	m=Pa11[i].m;
+	h=Pa11[i].h;
+	stoh=Pa11[i].stoh;
+	tconcn=Pa12[i].concn;
 
 	temp=Pa11[i].temp;
 	CV0=cvT(temp);
 
+	s=h/stoh;
+	vol=pow(s,d);
+
 	Pa11[i].p001=CV0;
+	Pa11[i].p002=Pa11[i].m-Kddc*vol*tconcn;		// initial water mass for particles
 }
 ////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real reference_density4(uint_t p_type,Real temp,Real m,Real h,Real stoh,Real CV0, int d)

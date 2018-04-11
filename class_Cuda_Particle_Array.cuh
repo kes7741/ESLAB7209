@@ -22,7 +22,7 @@ typedef struct particles_array_11{
 	Real flt_s;															// Shepard filter
 	Real w_dx;															// w(dx) for particle shifting
 	Real h;																	// kernel distance
-	Real stoh;															// initial particle space													
+	Real stoh;															// initial particle space
 	Real temp;															// temperature [K]
 	Real pres;															// pressure [Pa]
 	Real rho;																// density [kg/m3]	( Predictor_Corrector : Predicted density / Euler : Real density )
@@ -43,6 +43,7 @@ typedef struct particles_array_11{
 	Real ftotal;
 
 	Real p001;															// extra data
+	Real p002;
 }part11;
 ////////////////////////////////////////////////////////////////////////
 typedef struct particles_array_12{
