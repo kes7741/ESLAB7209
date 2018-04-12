@@ -246,13 +246,13 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			vis = fmin(vis, 100.0);
 			break;
 		case BOUNDARY:
-			vis=1e-3;
+			vis=1e-6;
 			break;
 		case FLUID:
 			vis=1e-3;
 			break;
 		case SALT_WATER:
-			vis=1e-1;
+			vis=5e-2;
 			break;
 		default:
 			vis=0.001;	// water viscosity
@@ -310,7 +310,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 0.7; 0.56~0.67 W/mK (water)
-			cond = 20.0;
+			cond = 50.0;
 			break;
 		default:
 			cond=1.65*200;
