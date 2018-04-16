@@ -7,7 +7,7 @@
 #define rho0A		2000		// reference density for species A (f=1)
 #define rho0B		1000		// reference density for species B (f=0)
 
-#define Kddc	70				// rho_sw = rho_w + K*f
+#define Kddc	95				// rho_sw = rho_w + K*f
 
 ////////////////////////////////////////////////////////////////////////
 #define SALT_WATER 2
@@ -246,13 +246,13 @@ __host__ __device__ Real viscosity(Real temp,uint_t p_type)
 			vis = fmin(vis, 100.0);
 			break;
 		case BOUNDARY:
-			vis=1e-6;
+			vis=1e-7;
 			break;
 		case FLUID:
 			vis=1e-3;
 			break;
 		case SALT_WATER:
-			vis=5e-2;
+			vis=1e-3;
 			break;
 		default:
 			vis=0.001;	// water viscosity
@@ -498,8 +498,8 @@ __host__ __device__ Real cvT(Real temp)
 
 	//cv=4E-06*temp*temp-0.002*temp+1.2641;	// water
 	//cv=0.0028*temp+0.25;	// test fluid
-	//cv = 0.0012*temp + 0.6667;
-	cv=0.001*temp+0.7391;
+	cv = 0.0012*temp + 0.6667;
+	//cv=0.001*temp+0.7391;
 
 
 	return cv;
@@ -719,4 +719,27 @@ __host__ __device__  Real K_to_eta(Real tK_stiff)
 	y=interp1(x_data1,y_data1,tK_stiff);
 
 	return y;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_update_periodic(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	Real x_tmp;
+	x_tmp = Pa11[i].x0;
+
+	if (x_tmp<0.0)
+	{
+			x_tmp=x_tmp+0.15;
+	}
+	else if (x_tmp>0.15)
+	{
+			x_tmp=x_tmp-0.15;
+	}
+
+	Pa11[i].x0=x_tmp;
+
 }

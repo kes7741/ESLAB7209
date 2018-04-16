@@ -26,7 +26,7 @@ void WCSPH(int_t*vii,Real*vif)
 			printf("...........................................................\n\n");
 		}
 	}
-	cudaSetDevice(0);		//device set-up
+	cudaSetDevice(1);		//device set-up
 
 	// print ------------------------------------------------------------------------------------------
 	printf(" ------------------------------------------------------------\n");
@@ -786,8 +786,12 @@ void WCSPH(int_t*vii,Real*vif)
 			cudaDeviceSynchronize();
 		}
 
-		// update mass;
+		// update mass
 		KERNEL_update_reference_mass<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+
+		// update periodic
+		//KERNEL_update_periodic<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+
 
 		//-------------------------------------------------------------------------------------------------
 		// ##. TIME STEP CONTROL & UPDATE
@@ -804,7 +808,7 @@ void WCSPH(int_t*vii,Real*vif)
 			cudaDeviceSynchronize();
 			max_umag=*(thrust::max_element(thrust::device_ptr<Real>(max_ux),thrust::device_ptr<Real>(max_ux+number_of_particles)));
 			max_ftotal=*(thrust::max_element(thrust::device_ptr<Real>(max_ft),thrust::device_ptr<Real>(max_ft+number_of_particles)));
-			max_c=*(thrust::max_element(thrust::device_ptr<Real>(max_c_dt),thrust::device_ptr<Real>(max_ft+number_of_particles)));
+			max_c=*(thrust::max_element(thrust::device_ptr<Real>(max_c_dt),thrust::device_ptr<Real>(max_c_dt+number_of_particles)));
 
 			//CFL timestep limit
 			dt_CFL=0.4*h0/max_c;														//CFL limit
