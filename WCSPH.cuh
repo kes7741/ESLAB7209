@@ -804,7 +804,7 @@ void WCSPH(int_t*vii,Real*vif)
 			cudaDeviceSynchronize();
 			max_umag=*(thrust::max_element(thrust::device_ptr<Real>(max_ux),thrust::device_ptr<Real>(max_ux+number_of_particles)));
 			max_ftotal=*(thrust::max_element(thrust::device_ptr<Real>(max_ft),thrust::device_ptr<Real>(max_ft+number_of_particles)));
-			max_c=*(thrust::max_element(thrust::device_ptr<Real>(max_c_dt),thrust::device_ptr<Real>(max_ft+number_of_particles)));
+			max_c=*(thrust::max_element(thrust::device_ptr<Real>(max_c_dt),thrust::device_ptr<Real>(max_c_dt+number_of_particles)));
 
 			//CFL timestep limit
 			dt_CFL=0.4*h0/max_c;														//CFL limit
