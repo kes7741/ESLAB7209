@@ -11,6 +11,10 @@
 
 ////////////////////////////////////////////////////////////////////////
 #define SALT_WATER 2
+#define alpha_T	0.0015
+#define alpha_S 0.04
+#define rho_ref0	1000
+#define T_ref0	290
 ////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real interp1(Real *x_data,Real *y_data,Real tx)
 {
@@ -310,7 +314,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 0.7; 0.56~0.67 W/mK (water)
-			cond = 50.0;
+			cond = 10.0;
 			break;
 		default:
 			cond=1.65*200;
@@ -392,7 +396,7 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			break;
 		case BOUNDARY:
 			//cond = 24.1;
-			y=0;
+			y=0.0;
 			break;
 		case FLUID:
 			//cond = 24.1;
@@ -401,7 +405,7 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 		case SALT_WATER:
 			//cond = 24.1;
 			//y = 0.000005;
-			y = 0.0000005;
+			y = 0.0000001;
 			break;
 		default:
 			//y=interp1(x_data1,y_data1,temp);
@@ -545,6 +549,15 @@ __host__ __device__ Real reference_density4(uint_t p_type,Real temp,Real m,Real 
 	vol=pow(s,d)*CV/CV0;
 
 	y = m/vol;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density5(uint_t p_type,Real temp,Real concn)
+{
+	Real y;
+
+	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn));
 
 	return y;
 }
@@ -729,6 +742,8 @@ __global__ void KERNEL_update_periodic(int_t nop,int_t*k_vii,part11*Pa11,part12*
 	if(i>=nop) return;
 
 	Real x_tmp;
+
+
 	x_tmp = Pa11[i].x0;
 
 	if (x_tmp<0.0)
@@ -741,5 +756,40 @@ __global__ void KERNEL_update_periodic(int_t nop,int_t*k_vii,part11*Pa11,part12*
 	}
 
 	Pa11[i].x0=x_tmp;
+
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_update_boundary_temp(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	Real y=Pa11[i].y;
+	uint_t p_typei=Pa11[i].p_type;
+
+	if (p_typei == BOUNDARY)
+	{
+		if (y > 0.075)
+		{
+			Pa11[i].temp=360;
+		}
+		else
+		{
+			Pa11[i].temp=270;
+		}
+	}
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_reset_denthalpy(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	uint_t p_typei=Pa11[i].p_type;
+
+	if (p_typei == -SALT_WATER)
+	{
+			Pa12[i].denthalpy=0.0;
+	}
 
 }

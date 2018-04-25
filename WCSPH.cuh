@@ -478,7 +478,7 @@ void WCSPH(int_t*vii,Real*vif)
 
 
 	// initialize CV0 for double diffusive convection... temporary function... only for DDC simulation... esk
-	KERNEL_init_double_diffusive<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+	// KERNEL_init_double_diffusive<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
 	//....
 
 
@@ -516,6 +516,8 @@ void WCSPH(int_t*vii,Real*vif)
 				cudaDeviceSynchronize();
 				KERNEL_clc_EnthalpytoTemp<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
 				cudaDeviceSynchronize();
+				//KERNEL_update_boundary_temp<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);	// temporary function (esk)
+				//cudaDeviceSynchronize();
 			}
 			if(concn_solve==1){
 				//particle_array.predictor_concn(dt);
@@ -684,8 +686,10 @@ void WCSPH(int_t*vii,Real*vif)
 		if(con_solve==1){
 			//---original//particle_array.calculate_heat_source();
 			//particle_array.calculate_conduction();
-			KERNEL_clc_conduction<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13,particle_array2);
+			//KERNEL_clc_conduction<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13,particle_array2);
+			KERNEL_clc_conduction2<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13,particle_array2);
 			KERNEL_clc_heat_source_sink_term<<<b,t>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13);
+			KERNEL_reset_denthalpy<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);	// temporary function (esk)
 			cudaDeviceSynchronize();
 		}
 		// calculate diffusion
@@ -702,7 +706,7 @@ void WCSPH(int_t*vii,Real*vif)
 		//-------------------------------------------------------------------------------------------------
 		// use if necessary...
 		//particle_array.switch_p_type();
-		KERNEL_switch_p_type_MCCI_CCI<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
+		//KERNEL_switch_p_type_MCCI_CCI<<<b,t>>>(number_of_particles,particle_array11,particle_array12);
 
 
 		//-------------------------------------------------------------------------------------------------
@@ -787,7 +791,7 @@ void WCSPH(int_t*vii,Real*vif)
 		}
 
 		// update mass
-		KERNEL_update_reference_mass<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+		//KERNEL_update_reference_mass<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
 
 		// update periodic
 		//KERNEL_update_periodic<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);

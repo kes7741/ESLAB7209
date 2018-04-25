@@ -105,7 +105,8 @@ __global__ void KERNEL_clc_reference_density(int_t nop,int_t*k_vii,part11*Pa11,p
 	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
 	//Pa11[i].rho_ref=reference_density2(tp_type,ttemp,m,h,d);
 	//Pa11[i].rho_ref=reference_density3(tp_type,ttemp,m,h,stoh,d);
-	Pa11[i].rho_ref=reference_density4(tp_type,ttemp,m,h,stoh,cv0,d);
+	//Pa11[i].rho_ref=reference_density4(tp_type,ttemp,m,h,stoh,cv0,d);
+	Pa11[i].rho_ref=reference_density5(tp_type,ttemp,tconcn);
 }
 ////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)

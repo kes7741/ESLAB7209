@@ -103,6 +103,84 @@ __global__ void KERNEL_clc_conduction(int_t nop,int_t pnbs,int_t tdim,part11*Pa1
 	if(cache_idx==0) Pa12[i].denthalpy=(cache[0]);  //Pa12[i].denthalpy=(cache[0]+sum_hf+sum_hs)*((Real)(1.0-Pa12[i].ct_boundary));
 }
 ////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_conduction2(int_t nop,int_t pnbs,int_t tdim,part11*Pa11,part12*Pa12,part13*Pa13,part2*Pa2)
+{
+	__shared__ Real cache[256];
+
+	cache[threadIdx.x]=0;
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+	uint_t ptypei,ptypej;
+	Real rhoi,rhoj,mi,mj;
+	Real yj;		// temparary
+	Real kci,kcj,tempi,tempj;
+	Real qwi,qsi,ai,voli;
+	Real tdist,tdwij;
+	Real hi,eta;
+	Real sum_hf,sum_hs,sum_con_H; //sum_H
+	Real lbl_surf_i;
+	qsi = 0.;
+	qwi = 0.;
+
+
+	non=Pa11[i].number_of_neighbors;
+
+	if(cache_idx<non){
+		tdist=Pa2[tid].dist;																					// distance between i and j particles (dist)
+
+		if(tdist>0.){
+			j=Pa2[tid].pnb;																							// neighbor particle index: j
+			tdwij=Pa2[tid].dwij;																					// kernel derivative function between i and j particles (dWij)
+
+			ptypei=Pa11[i].p_type;
+			mi=Pa11[i].m;																										// i particle mass
+			rhoi=Pa11[i].rho;																								// i particle density
+			tempi=Pa11[i].temp;																							// i particle temperature
+			hi=Pa11[i].h;
+			mj=Pa11[j].m;																									// j particle mass
+			yj=Pa11[j].y;
+			ptypej=Pa11[j].p_type;
+			rhoj=Pa11[j].rho;																							// j particle density
+			tempj=Pa11[j].temp;																						// j particle temperature
+			lbl_surf_i=Pa13[i].lbl_surf;
+
+			eta=0.001*hi;																										// eta=0.01*h (for smoothing the singularity when dist is close to zero)
+
+			kci = conductivity(tempi, ptypei);		// i particle conductivity
+			kcj = conductivity(tempj, ptypej);		// j particle conductivity
+
+			//qwi = DEVICE_clc_heat_source(tempi, lbl_surf_i, ptypei);						// radiation heat transfer heat flux [W/m^2]
+			//qwi += DEVICE_clc_boiling_h(tempi, lbl_surf_i, ptypei);							// heat flux of boiling heat transfer [W/m^2]
+			// qsi = DEVICE_clc_heat_generation(tempi, ptypei);								// Volumetric heat genration rate [W/m^3]
+
+			// if (tdim == 1)	ai = 1;												// heat flux area of particle i (dim: 1)
+			// if (tdim == 2)	ai = (2. / 3.) * hi;								// heat flux area of particle i (dim: 2)
+			// if (tdim == 3)	ai = (2. / 3.) * hi * (2. / 3.) * hi;				// heat flux area of particle i (dim: 3)
+
+			// if (tdim == 1)	voli = (2. / 3.) * hi;													// volume of particle i (dim: 1)
+			// if (tdim == 2)	voli = (2. / 3.) * hi * (2. / 3.) * hi;									// volume of particle i (dim: 2)
+			// if (tdim == 3)	voli = (2. / 3.) * hi * (2. / 3.) * hi * (2. / 3.) * hi;				// volume of particle i (dim: 3)
+
+			//sum_hf=qwi*ai/mi;																							// heat flux boundary equation
+			// sum_hs=qsi*voli/mi;
+			//sum_hs = 10000 *(ptypei==MCCI_CORIUM);
+
+			sum_con_H=((4.0*mj*kcj*kci)/(rhoi*rhoj*(kci+kcj+0.0001)))*(tempi-tempj)*tdwij/((tdist)+eta*eta);		// Heat Conduction Equation
+			cache[cache_idx]=sum_con_H;
+		}
+	}
+	__syncthreads();
+	uint_t s;
+	for(s=blockDim.x*0.5;s>0;s>>=1){
+		if(cache_idx<s) cache[cache_idx]+=cache[cache_idx+s];
+		__syncthreads();
+	}
+	if(cache_idx==0) Pa12[i].denthalpy=(cache[0]);  //Pa12[i].denthalpy=(cache[0]+sum_hf+sum_hs)*((Real)(1.0-Pa12[i].ct_boundary));
+}
+////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_clc_heat_source_sink_term(int_t nop,int_t pnbs,int_t tdim,part11*Pa11,part12*Pa12,part13*Pa13)
 {
 	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
