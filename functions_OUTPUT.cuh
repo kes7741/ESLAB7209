@@ -357,7 +357,7 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	//{	outFile_vtk << i << endl;	}
 
 	// all the data of particles are FieldData except 'index' ( 3: declare number of property data )
-	fprintf(outFile_vtk,"FIELD FieldData\t3\n");
+	fprintf(outFile_vtk,"FIELD FieldData\t2\n");
 
 	//outFile_vtk << "lbl_surf" << "\t" << 1 << "\t" << Nparticle << "\t" << "float" << endl;			// print out density
 	//for (int_t i=0;i<number_of_particles;i++)
@@ -397,10 +397,16 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 			fprintf(outFile_vtk,"%f\n",Pa12[i].vis_t);
 	}
 	//*/
-	//*// denstity
-	fprintf(outFile_vtk,"density\t1\t%d\tfloat\n",Nparticle);
+	/*// denstity
+	fprintf(outFile_vtk,"rho\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].rho);
+	}
+	//*/
+	/*// reference denstity
+	fprintf(outFile_vtk,"rho_ref\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa11[i].rho_ref);
 	}
 	//*/
 	/*// CV0... for DDC simulation
@@ -419,6 +425,18 @@ void save_plot_fluid_vtk2(int_t*vii,Real*vif,part11*Pa11,part12*Pa12)
 	fprintf(outFile_vtk,"ftotaly\t1\t%d\tfloat\n",Nparticle);
 	for(i=0;i<nop;i++){
 			fprintf(outFile_vtk,"%f\n",Pa11[i].ftotaly);
+	}
+	//*/
+	/*// vel_x
+	fprintf(outFile_vtk,"p002\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa11[i].p002);
+	}
+	//*/
+	/*// vel_y
+	fprintf(outFile_vtk,"flt_s\t1\t%d\tfloat\n",Nparticle);
+	for(i=0;i<nop;i++){
+			fprintf(outFile_vtk,"%f\n",Pa11[i].flt_s);
 	}
 	//*/
 	//*/

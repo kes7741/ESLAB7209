@@ -1430,6 +1430,54 @@ __global__ void KERNEL_add_boussinesq_force(int_t nop,int_t pnbs,int_t tdim,part
 	//*/
 }
 ////////////////////////////////////////////////////////////////////////
+// natural convection force (boussinesq approximation)
+__global__ void KERNEL_add_boussinesq_force1(int_t nop,int_t pnbs,int_t tdim,part11*Pa11,part12*Pa12,part2*Pa2)
+{
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+	uint_t p_type_i,p_type_j;
+	Real tempi,tempj,betai;			// beta : thermal expansion coefficient
+	Real mj,rhoj,twij;
+	Real concni;
+	non=Pa11[i].number_of_neighbors;
+
+	if(cache_idx<non){
+		j=Pa2[tid].pnb;
+		twij=Pa2[tid].wij;
+
+		p_type_i=Pa11[i].p_type;
+		tempi=Pa11[i].temp;
+		concni=Pa12[i].concn;
+		if (concni<0) concni=0;
+
+		p_type_j=Pa11[j].p_type;
+		mj=Pa11[j].m;
+		rhoj=Pa11[j].rho;
+		tempj=Pa11[j].temp;
+
+		betai=thermal_expansion(tempi,p_type_i);
+		//betai=alpha_T;
+	}
+
+	if(cache_idx==0){
+		switch(tdim){
+			case 3:
+				//Pa11[i].ftotalz+=betai*Gravitational_CONST*(tempi-T_ref0);				// z-directional gravitational force
+				Pa11[i].ftotalz+=Gravitational_CONST*(alpha_T*(tempi-T_ref0)-alpha_S*(concni-S_ref0));				// z-directional gravitational force
+				break;
+			case 2:
+				//Pa11[i].ftotaly+=betai*Gravitational_CONST*(tempi-T_ref0);				// y-directional gravitational force
+				Pa11[i].ftotaly+=Gravitational_CONST*(alpha_T*(tempi-T_ref0)-alpha_S*(concni-S_ref0));				// y-directional gravitational force
+				break;
+			default:
+				break;
+		}
+	}
+}
+////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_clc_ftotal(int_t nop,part11*Pa11)
 {
 	uint_t i=threadIdx.x+blockIdx.x*blockDim.x;
@@ -1530,7 +1578,7 @@ void calculate_force(int_t*vii,Real*vif,part11*Pa11,part12*Pa12,part13*Pa13,part
 	}
 	if(boussinesq_solve==1){
 		// natural convection (boussinesq approximation) force calculation function
-		KERNEL_add_boussinesq_force<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,Pa11,Pa2);
+		KERNEL_add_boussinesq_force1<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,Pa11,Pa12,Pa2);
 		cudaDeviceSynchronize();
 	}
 	// sum up forces

@@ -1,5 +1,5 @@
 // Parameter Definitions
-typedef float Real;
+typedef double Real;
 typedef int int_t;
 typedef int uint_t;
 

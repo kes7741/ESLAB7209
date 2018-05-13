@@ -104,9 +104,11 @@ __global__ void KERNEL_clc_reference_density(int_t nop,int_t*k_vii,part11*Pa11,p
 
 	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
 	//Pa11[i].rho_ref=reference_density2(tp_type,ttemp,m,h,d);
-	//Pa11[i].rho_ref=reference_density3(tp_type,ttemp,m,h,stoh,d);
-	//Pa11[i].rho_ref=reference_density4(tp_type,ttemp,m,h,stoh,cv0,d);
-	Pa11[i].rho_ref=reference_density5(tp_type,ttemp,tconcn);
+	Pa11[i].rho_ref=reference_density_LENA(tp_type,ttemp,m,h,stoh,d);		// for LENA input
+	//Pa11[i].rho_ref=reference_density_DDC(tp_type,ttemp,m,h,stoh,cv0,d);	// for DDC input
+	//Pa11[i].rho_ref=reference_density5(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,m,h,stoh,d);		// for LENA input
+
 }
 ////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
@@ -125,24 +127,27 @@ __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,p
 
 	tp_type=Pa11[i].p_type;
 	m=Pa11[i].m;
-	mw=Pa11[i].p002;
+	//mw=Pa11[i].p002;
 	h=Pa11[i].h;
 	stoh=Pa11[i].stoh;
 	ttemp=Pa11[i].temp;
 	tconcn=Pa12[i].concn;
 
+	// for LENA Input..........
 	if (tp_type == CORIUM)
 	{
 		s=h/stoh;
 		vol=pow(s,d);
 		m=(rho0A*vol*tconcn)+(rho0B*vol*(1-tconcn));
 	}
+	//.........................
 
 	if (tp_type == SALT_WATER)
 	{
 		s=h/stoh;
 		vol=pow(s,d);
-		m=mw+Kddc*vol*tconcn;
+		//mw=rho_ref0*vol;
+		//m=mw*(1-alpha_T*(ttemp-T_ref0));
 	}
 
 	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);

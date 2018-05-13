@@ -11,10 +11,14 @@
 
 ////////////////////////////////////////////////////////////////////////
 #define SALT_WATER 2
-#define alpha_T	0.0015
-#define alpha_S 0.04
+//#define alpha_T	0.0003		// original
+//#define alpha_S 0.05			// original
+//#define alpha_S 0.1				// original
+#define alpha_T	0.003				// fingering
+#define alpha_S 0.1					// fingering
 #define rho_ref0	1000
 #define T_ref0	290
+#define S_ref0	0.0
 ////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real interp1(Real *x_data,Real *y_data,Real tx)
 {
@@ -314,7 +318,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 0.7; 0.56~0.67 W/mK (water)
-			cond = 10.0;
+			cond = 20.0;
 			break;
 		default:
 			cond=1.65*200;
@@ -404,8 +408,8 @@ __host__ __device__ Real diffusion_coefficient(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 24.1;
-			//y = 0.000005;
-			y = 0.0000001;
+			y=0.0000001;
+			//y = 2e-9;
 			break;
 		default:
 			//y=interp1(x_data1,y_data1,temp);
@@ -496,6 +500,19 @@ __host__ __device__ Real reference_density3(uint_t p_type,Real temp,Real m,Real 
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density_LENA(uint_t p_type,Real temp,Real m,Real h,Real stoh, int d)
+{
+	Real y;
+	Real vol,s;
+
+	s=h/stoh;
+	vol=pow(s,d);
+
+	y = m/vol;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real cvT(Real temp)
 {
 	Real cv;
@@ -537,7 +554,7 @@ __global__ void KERNEL_init_double_diffusive(int_t nop,int_t*k_vii,part11*Pa11,p
 	Pa11[i].p002=Pa11[i].m-Kddc*vol*tconcn;		// initial water mass for particles
 }
 ////////////////////////////////////////////////////////////////////////
-__host__ __device__ Real reference_density4(uint_t p_type,Real temp,Real m,Real h,Real stoh,Real CV0, int d)
+__host__ __device__ Real reference_density_DDC(uint_t p_type,Real temp,Real m,Real h,Real stoh,Real CV0, int d)
 {
 	Real y;
 	Real vol,s;
@@ -557,7 +574,25 @@ __host__ __device__ Real reference_density5(uint_t p_type,Real temp,Real concn)
 {
 	Real y;
 
-	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn));
+	if (concn<0) concn=0.0;
+
+	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*concn);
+	//y=rho_ref0;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density_SIDE(uint_t p_type,Real temp,Real m,Real h,Real stoh, int d)
+{
+	Real y;
+	Real vol,s;
+
+	s=h/stoh;
+	vol=pow(s,d);
+
+	y = m/vol;
+
+	y=y*(1-alpha_T*(temp-T_ref0));
 
 	return y;
 }
@@ -591,7 +626,7 @@ __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 			y=3.81e-4;
 			break;
 		case SALT_WATER:
-			y=3.81e-4;
+			y=alpha_T;
 			break;
 		default:
 			y=3.81e-4;
@@ -793,3 +828,36 @@ __global__ void KERNEL_reset_denthalpy(int_t nop,int_t*k_vii,part11*Pa11,part12*
 	}
 
 }
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_p002(int_t nop,int_t pnbs,part11*Pa11,part2*Pa2)
+{
+	__shared__ Real cache[256];
+	cache[threadIdx.x]=0;
+
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+	Real mj,twij;
+	Real rho_ref_i,rho_ref_j;
+
+	non=Pa11[i].number_of_neighbors;
+	rho_ref_i=Pa11[i].rho_ref;
+
+	if(cache_idx<non){
+		j=Pa2[tid].pnb;
+		twij=Pa2[tid].wij;
+		mj=Pa11[j].m;
+		rho_ref_j=Pa11[j].rho_ref;
+		cache[cache_idx]=(mj/rho_ref_j)*twij;
+	}
+	__syncthreads();
+	uint_t s;
+	for(s=blockDim.x*0.5;s>0;s>>=1){
+		if(cache_idx<s) cache[cache_idx]+=cache[cache_idx+s];
+		__syncthreads();
+	}
+	if(cache_idx==0) Pa11[i].p002=rho_ref_i*cache[0];
+}
+////////////////////////////////////////////////////////////////////////
