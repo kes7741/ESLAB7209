@@ -11,8 +11,8 @@
 
 ////////////////////////////////////////////////////////////////////////
 #define SALT_WATER 2
-#define alpha_T	0.001
-#define alpha_S 0.1
+#define alpha_T	0.0003
+#define alpha_S 0.05
 #define rho_ref0	1000
 #define T_ref0	290
 ////////////////////////////////////////////////////////////////////////
@@ -314,7 +314,7 @@ __host__ __device__ Real conductivity(Real temp,uint_t p_type)
 			break;
 		case SALT_WATER:
 			//cond = 0.7; 0.56~0.67 W/mK (water)
-			cond = 10.0;
+			cond = 1.0;
 			break;
 		default:
 			cond=1.65*200;
