@@ -689,7 +689,7 @@ void WCSPH(int_t*vii,Real*vif)
 			//KERNEL_clc_conduction<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13,particle_array2);
 			KERNEL_clc_conduction2<<<number_of_particles,thread_size>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13,particle_array2);
 			KERNEL_clc_heat_source_sink_term<<<b,t>>>(number_of_particles,pnb_size,dim,particle_array11,particle_array12,particle_array13);
-			KERNEL_reset_denthalpy<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);	// temporary function (esk)
+			//KERNEL_reset_denthalpy<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);	// temporary function (esk)
 			cudaDeviceSynchronize();
 		}
 		// calculate diffusion
