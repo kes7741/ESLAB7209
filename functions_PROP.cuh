@@ -1,4 +1,6 @@
 ////////////////////////////////////////////////////////////////////////
+// Version: Buoyancy Force Set-up
+////////////////////////////////////////////////////////////////////////
 #define NU0_HB	1.0			//Herschel-Bulkey model parameter
 #define TAU0_HB	18.24		//Herschel-Bulkey model parameter (for lava flow)
 #define K0_HB		1.90		//Herschel-Bulkey model parameter (for lava flow)
@@ -14,8 +16,10 @@
 //#define alpha_T	0.0003		// original
 //#define alpha_S 0.05			// original
 //#define alpha_S 0.1				// original
-#define alpha_T	0.003				// fingering
+#define alpha_T	0.003			// fingering
+//#define alpha_T	0.0					// fingering
 #define alpha_S 0.1					// fingering
+//#define alpha_S 0.0				// fingering
 #define rho_ref0	1000
 #define T_ref0	290
 #define S_ref0	0.0
@@ -576,13 +580,14 @@ __host__ __device__ Real reference_density5(uint_t p_type,Real temp,Real concn)
 
 	if (concn<0) concn=0.0;
 
-	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*concn);
-	//y=rho_ref0;
+	//y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
+	//y=rho_ref0*(1);
+	y=rho_ref0*(1-alpha_T*(temp-T_ref0));
 
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
-__host__ __device__ Real reference_density_SIDE(uint_t p_type,Real temp,Real m,Real h,Real stoh, int d)
+__host__ __device__ Real reference_density_SIDE(uint_t p_type,Real temp,Real concn,Real m,Real h,Real stoh, int d)
 {
 	Real y;
 	Real vol,s;
@@ -592,7 +597,10 @@ __host__ __device__ Real reference_density_SIDE(uint_t p_type,Real temp,Real m,R
 
 	y = m/vol;
 
+	//y=y*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
+
 	y=y*(1-alpha_T*(temp-T_ref0));
+
 
 	return y;
 }
@@ -859,5 +867,60 @@ __global__ void KERNEL_clc_p002(int_t nop,int_t pnbs,part11*Pa11,part2*Pa2)
 		__syncthreads();
 	}
 	if(cache_idx==0) Pa11[i].p002=rho_ref_i*cache[0];
+}
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+#define x_center	0
+#define y_center 	0
+#define z_center	0
+#define R_circle	0.02
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_treat_penetration(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+
+	if(i>=nop) return;
+
+	Real x,y,z;
+	Real ux,uy,uz;
+	Real F_sphere;
+
+	uint_t p_typei=Pa11[i].p_type;
+
+	x=Pa11[i].x0;
+	y=Pa11[i].y0;
+	z=Pa11[i].z0;
+
+	ux=Pa11[i].ux0;
+	uy=Pa11[i].uy0;
+	uz=Pa11[i].uz0;
+
+	F_sphere=((x-x_center)*(x-x_center)+(y-y_center)*(y-y_center))-R_circle*R_circle;
+
+	if(F_sphere<=0) return;		// leave if the particle is inside.
+
+	Real cpx,cpy,cpz;
+	Real d_sphere;
+	Real nx_sphere,ny_sphere,nz_sphere;
+
+	//normal vector
+	nx_sphere=(x-x_center)/(sqrtf((F_sphere+R_circle*R_circle))+1e-10);
+	ny_sphere=(y-y_center)/(sqrtf((F_sphere+R_circle*R_circle))+1e-10);
+
+	//contact point
+	cpx=x_center+R_circle*nx_sphere;
+	cpy=y_center+R_circle*ny_sphere;
+
+	//penetration depth
+	d_sphere=sqrtf((F_sphere+R_circle*R_circle)-R_circle);
+
+	//position update
+	Pa11[i].x0=cpx;
+	Pa11[i].y0=cpy;
+
+	//velocity KERNEL_update
+	Pa11[i].ux0=ux-2*(ux*nx_sphere+uy*ny_sphere)*nx_sphere;
+	Pa11[i].uy0=uy-2*(ux*nx_sphere+uy*ny_sphere)*ny_sphere;
+
 }
 ////////////////////////////////////////////////////////////////////////
