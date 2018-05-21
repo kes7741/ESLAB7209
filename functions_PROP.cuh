@@ -580,9 +580,9 @@ __host__ __device__ Real reference_density5(uint_t p_type,Real temp,Real concn)
 
 	if (concn<0) concn=0.0;
 
-	//y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
+	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
 	//y=rho_ref0*(1);
-	y=rho_ref0*(1-alpha_T*(temp-T_ref0));
+	//y=rho_ref0;
 
 	return y;
 }
@@ -598,9 +598,33 @@ __host__ __device__ Real reference_density_SIDE(uint_t p_type,Real temp,Real con
 	y = m/vol;
 
 	//y=y*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
+	//y=y*(1-alpha_T*(temp-T_ref0));
 
-	y=y*(1-alpha_T*(temp-T_ref0));
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density_boussinesq(uint_t p_type,Real temp,Real m,Real h,Real stoh, int d)
+{
+	Real y;
+	Real vol,s;
 
+	s=h/stoh;
+	vol=pow(s,d);
+
+	y = m/vol;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_density_non_boussinesq(uint_t p_type,Real temp,Real concn)
+{
+	Real y;
+
+	if (concn<0) concn=0.0;
+
+	y=rho_ref0*(1-alpha_T*(temp-T_ref0)+alpha_S*(concn-S_ref0));
+	//y=rho_ref0*(1);
+	//y=rho_ref0;
 
 	return y;
 }

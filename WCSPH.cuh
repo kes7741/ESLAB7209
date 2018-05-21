@@ -505,9 +505,16 @@ void WCSPH(int_t*vii,Real*vif)
 				cudaDeviceSynchronize();
 			}
 
-			//particle_array.update_reference_density();
-			KERNEL_clc_reference_density<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
-			cudaDeviceSynchronize();
+			//update reference density
+			if(boussinesq_solve==1){
+				KERNEL_clc_reference_density01<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+				cudaDeviceSynchronize();
+			}
+			else
+			{
+				KERNEL_clc_reference_density02<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+				cudaDeviceSynchronize();
+			}
 
 			if(con_solve==1){
 				//particle_array.predictor_enthalpy(dt);
@@ -630,6 +637,27 @@ void WCSPH(int_t*vii,Real*vif)
 				cudaDeviceSynchronize();
 				break;
 		}
+
+
+/*
+			//...
+			cudaMemcpy(host_particle_array11,particle_array11,malloc_size*sizeof(part11),cudaMemcpyDeviceToHost);
+			cudaMemcpy(host_particle_array12,particle_array12,malloc_size*sizeof(part12),cudaMemcpyDeviceToHost);
+			cudaMemcpy(host_particle_array13,particle_array13,malloc_size*sizeof(part13),cudaMemcpyDeviceToHost);
+			cudaMemcpy(host_particle_array2,particle_array2,malloc_size2*sizeof(part2),cudaMemcpyDeviceToHost);
+			// save *.txt
+			//host_particle_array.save_plot_xyz(time-dt,count-1);
+			// save *.vtk files
+			//host_particle_array.save_plot_fluid_vtk(time-dt,count-1);
+			//save_plot_fluid_vtk(vii,vif,host_particle_array11);
+			save_plot_fluid_vtk2(vii,vif,host_particle_array11,host_particle_array12);
+			//...
+
+
+  		int iiii;
+			printf("pause....");
+			scanf ("%d",&iiii);
+*/
 
 		if(delSPH_solve==1){
 			//particle_array.calculate_density_diffusion();

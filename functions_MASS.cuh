@@ -78,6 +78,42 @@ __global__ void KERNEL_clc_mass_sum_norm(int_t nop,int_t pnbs,part11*Pa11,part2*
 		if(cache_idx<s) cache[cache_idx]+=cache[cache_idx+s];
 		__syncthreads();
 	}
+	if(cache_idx==0)
+	{
+		Pa11[i].rho=rho_ref_i*cache[0]/Pa11[i].flt_s;
+		Pa11[i].p002=cache[0];
+	}
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_mass_sum_norm0(int_t nop,int_t pnbs,part11*Pa11,part2*Pa2)
+{
+	__shared__ Real cache[256];
+	cache[threadIdx.x]=0;
+
+	uint_t i=blockIdx.x;
+	int_t cache_idx=threadIdx.x;
+	uint_t tid=threadIdx.x+blockIdx.x*pnbs;
+
+	uint_t non,j;
+	Real mj,twij;
+	Real rho_ref_i,rho_ref_j;
+
+	non=Pa11[i].number_of_neighbors;
+	rho_ref_i=Pa11[i].rho_ref;
+
+	if(cache_idx<non){
+		j=Pa2[tid].pnb;
+		twij=Pa2[tid].wij;
+		mj=Pa11[j].m;
+		rho_ref_j=Pa11[j].rho_ref;
+		cache[cache_idx]=(mj/rho_ref_j)*twij;
+	}
+	__syncthreads();
+	uint_t s;
+	for(s=blockDim.x*0.5;s>0;s>>=1){
+		if(cache_idx<s) cache[cache_idx]+=cache[cache_idx+s];
+		__syncthreads();
+	}
 	if(cache_idx==0) Pa11[i].rho=rho_ref_i*cache[0]/Pa11[i].flt_s;
 }
 ////////////////////////////////////////////////////////////////////////
@@ -107,6 +143,64 @@ __global__ void KERNEL_clc_reference_density(int_t nop,int_t*k_vii,part11*Pa11,p
 	//Pa11[i].rho_ref=reference_density_LENA(tp_type,ttemp,m,h,stoh,d);		// for LENA input
 	//Pa11[i].rho_ref=reference_density_DDC(tp_type,ttemp,m,h,stoh,cv0,d);	// for DDC input
 	Pa11[i].rho_ref=reference_density5(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,tconcn,m,h,stoh,d);		// for LENA input
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_reference_density01(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	//Real trhoA;
+	uint_t tp_type;
+	Real ttemp;
+	Real m,h,stoh;
+	Real tconcn;
+	Real cv0;
+	int d=k_vii[1];
+
+	tp_type=Pa11[i].p_type;
+	m=Pa11[i].m;
+	h=Pa11[i].h;
+	stoh=Pa11[i].stoh;
+	ttemp=Pa11[i].temp;
+	tconcn=Pa12[i].concn;
+	cv0=Pa11[i].p001;
+
+	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density2(tp_type,ttemp,m,h,d);
+	Pa11[i].rho_ref=reference_density_boussinesq(tp_type,ttemp,m,h,stoh,d);		// for LENA input
+	//Pa11[i].rho_ref=reference_density_DDC(tp_type,ttemp,m,h,stoh,cv0,d);	// for DDC input
+	//Pa11[i].rho_ref=reference_density5(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,tconcn,m,h,stoh,d);		// for LENA input
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_reference_density02(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	//Real trhoA;
+	uint_t tp_type;
+	Real ttemp;
+	Real m,h,stoh;
+	Real tconcn;
+	Real cv0;
+	int d=k_vii[1];
+
+	tp_type=Pa11[i].p_type;
+	m=Pa11[i].m;
+	h=Pa11[i].h;
+	stoh=Pa11[i].stoh;
+	ttemp=Pa11[i].temp;
+	tconcn=Pa12[i].concn;
+	cv0=Pa11[i].p001;
+
+	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density2(tp_type,ttemp,m,h,d);
+	//Pa11[i].rho_ref=reference_density_LENA(tp_type,ttemp,m,h,stoh,d);		// for LENA input
+	//Pa11[i].rho_ref=reference_density_DDC(tp_type,ttemp,m,h,stoh,cv0,d);	// for DDC input
+	Pa11[i].rho_ref=reference_density_non_boussinesq(tp_type,ttemp,tconcn);
 	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,tconcn,m,h,stoh,d);		// for LENA input
 }
 ////////////////////////////////////////////////////////////////////////
