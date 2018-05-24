@@ -629,6 +629,19 @@ __host__ __device__ Real reference_density_non_boussinesq(uint_t p_type,Real tem
 	return y;
 }
 ////////////////////////////////////////////////////////////////////////
+__host__ __device__ Real reference_mass_non_boussinesq(uint_t p_type,Real m0,Real concn)
+{
+	Real y;
+
+	if (concn<0) concn=0.0;
+
+	y=m0*(1+alpha_S*(concn-S_ref0));
+	//y=rho_ref0*(1);
+	//y=rho_ref0;
+
+	return y;
+}
+////////////////////////////////////////////////////////////////////////
 __host__ __device__ Real thermal_expansion(Real temp,uint_t p_type)
 {
 	Real y;
@@ -946,5 +959,18 @@ __global__ void KERNEL_treat_penetration(int_t nop,int_t*k_vii,part11*Pa11,part1
 	Pa11[i].ux0=ux-2*(ux*nx_sphere+uy*ny_sphere)*nx_sphere;
 	Pa11[i].uy0=uy-2*(ux*nx_sphere+uy*ny_sphere)*ny_sphere;
 
+}
+////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_init_m0(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	uint_t p_typei=Pa11[i].p_type;
+	Real m=Pa11[i].m;
+	Real concn=Pa12[i].concn;
+
+	// initialize m0
+	Pa11[i].m0=m/(1+alpha_S*(concn-S_ref0));
 }
 ////////////////////////////////////////////////////////////////////////

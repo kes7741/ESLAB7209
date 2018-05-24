@@ -204,6 +204,39 @@ __global__ void KERNEL_clc_reference_density02(int_t nop,int_t*k_vii,part11*Pa11
 	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,tconcn,m,h,stoh,d);		// for LENA input
 }
 ////////////////////////////////////////////////////////////////////////
+__global__ void KERNEL_clc_reference_density03(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
+{
+	int_t i=threadIdx.x+blockIdx.x*blockDim.x;
+	if(i>=nop) return;
+
+	//Real trhoA;
+	uint_t tp_type;
+	Real ttemp;
+	Real m,m0,h,stoh;
+	Real tconcn;
+	Real cv0;
+	int d=k_vii[1];
+
+	tp_type=Pa11[i].p_type;
+	m=Pa11[i].m;
+	m0=Pa11[i].m0;
+	h=Pa11[i].h;
+	stoh=Pa11[i].stoh;
+	ttemp=Pa11[i].temp;
+	tconcn=Pa12[i].concn;
+	cv0=Pa11[i].p001;
+
+	//Pa11[i].rho_ref=reference_density(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density2(tp_type,ttemp,m,h,d);
+	//Pa11[i].rho_ref=reference_density_LENA(tp_type,ttemp,m,h,stoh,d);		// for LENA input
+	//Pa11[i].rho_ref=reference_density_DDC(tp_type,ttemp,m,h,stoh,cv0,d);	// for DDC input
+	Pa11[i].rho_ref=reference_density_non_boussinesq(tp_type,ttemp,tconcn);
+	//Pa11[i].rho_ref=reference_density_SIDE(tp_type,ttemp,tconcn,m,h,stoh,d);		// for LENA input
+
+	Pa11[i].m=reference_mass_non_boussinesq(tp_type,m0,tconcn);
+
+}
+////////////////////////////////////////////////////////////////////////
 __global__ void KERNEL_update_reference_mass(int_t nop,int_t*k_vii,part11*Pa11,part12*Pa12)
 {
 	int_t i=threadIdx.x+blockIdx.x*blockDim.x;

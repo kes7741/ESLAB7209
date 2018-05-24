@@ -479,7 +479,9 @@ void WCSPH(int_t*vii,Real*vif)
 
 	// initialize CV0 for double diffusive convection... temporary function... only for DDC simulation... esk
 	// KERNEL_init_double_diffusive<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
-	//....
+
+	// initialize m0
+	KERNEL_init_m0<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
 
 
 	//-------------------------------------------------------------------------------------------------
@@ -512,7 +514,8 @@ void WCSPH(int_t*vii,Real*vif)
 			}
 			else
 			{
-				KERNEL_clc_reference_density02<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+				//KERNEL_clc_reference_density02<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
+				KERNEL_clc_reference_density03<<<b,t>>>(number_of_particles,k_vii,particle_array11,particle_array12);
 				cudaDeviceSynchronize();
 			}
 

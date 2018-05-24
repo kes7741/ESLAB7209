@@ -44,6 +44,7 @@ typedef struct particles_array_11{
 
 	Real p001;															// extra data
 	Real p002;
+	Real m0;	// reference density... for non_boussinesq natural circulation model
 }part11;
 ////////////////////////////////////////////////////////////////////////
 typedef struct particles_array_12{
